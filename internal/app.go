@@ -1,0 +1,38 @@
+package internal
+
+import (
+	"fmt"
+	"log"
+	"net/http"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/stdlib"
+	"github.com/jmoiron/sqlx"
+	"github.com/solsteace/misite/internal/controller"
+	"github.com/solsteace/misite/internal/persistence"
+	"github.com/solsteace/misite/internal/route"
+	"github.com/solsteace/misite/internal/service"
+)
+
+func Run() {
+	LoadEnv()
+	dbCfg, err := pgx.ParseConfig(dB_URL)
+	if err != nil {
+		log.Fatalf("db init: %v", err)
+	}
+	dbConn := sqlx.NewDb(stdlib.OpenDB(*dbCfg), "pgx")
+	defer dbConn.Close()
+
+	app := chi.NewRouter()
+	store := persistence.NewPg(dbConn)
+	service := service.NewService(&store)
+	controller := controller.NewController(service)
+	route.NewRouter(controller).UseOn(app)
+
+	port := 10000
+	fmt.Printf(fmt.Sprintf("Server listening on port %d...\n", port))
+	if err := http.ListenAndServe(fmt.Sprintf(":%d", port), app); err != nil {
+		log.Fatalf("server listening: %v", err)
+	}
+}

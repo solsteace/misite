@@ -1,0 +1,28 @@
+package component
+
+import "io"
+import "context"
+
+templ base() {
+    <html>
+        <head>
+            <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+        </head>
+        <body>
+            {children...}
+        </body>
+    </html>
+}
+
+templ Home() {
+    <h1 x-data="{ message: 'I ❤️ Alpine' }" x-text="message"></h1>
+}
+
+templ Park() {
+    <h1 x-data="{ message: 'Hello' }" x-text="message"></h1>
+}
+
+func RenderBaseTo(w io.Writer, child templ.Component) {
+    ctx := templ.WithChildren(context.Background(), child) 
+    base().Render(ctx, w)
+}

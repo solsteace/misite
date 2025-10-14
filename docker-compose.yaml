@@ -1,0 +1,23 @@
+services:
+  web:
+    volumes:
+      - .:/site
+    ports:
+      - 10000:10000
+    build:
+      dockerfile: ./Dockerfile
+      target: devel
+    env_file:
+      - path: "./internal/.env"
+        required: true
+  db:
+    image: postgres:alpine
+    volumes:
+      - db-vol:/var/lib/postgresql
+    environment:
+      POSTGRES_USER: misite
+      POSTGRES_DB: misite
+      POSTGRES_PASSWORD: stay_by_
+
+volumes:
+  db-vol:
