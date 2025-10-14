@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
@@ -28,6 +29,10 @@ func Run() {
 	store := persistence.NewPg(dbConn)
 	service := service.NewService(&store)
 	controller := controller.NewController(service)
+
+	app.Use(middleware.RequestID)
+	app.Use(middleware.Logger)
+	app.Use(middleware.Recoverer)
 	route.NewRouter(controller).UseOn(app)
 
 	port := 10000
