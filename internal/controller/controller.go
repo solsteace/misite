@@ -29,31 +29,51 @@ func NewController(
 		htmxUrl:     htmxUrl}
 }
 
-func (c Controller) NotFound(w http.ResponseWriter, r *http.Request) error {
-	ctx := templ.WithChildren(context.Background(), page.NotFound())
-	component.Base(c.alpinejsUrl, c.htmxUrl).Render(ctx, w)
-
-	w.WriteHeader(http.StatusNotFound)
-	return nil
+func (c Controller) pageFromName(name string) templ.Component {
+	switch name {
+	case "home":
+		return component.Home()
+	case "park":
+		return component.Park()
+	default:
+		return page.NotFound()
+	}
 }
 
-func (c Controller) RedirectToHome(w http.ResponseWriter, r *http.Request) error {
-	http.Redirect(w, r, "/home", http.StatusMovedPermanently)
+func (c Controller) ServeBase(w http.ResponseWriter, r *http.Request) error {
+	initialBody := "home"
+	if initialPage, ok := r.Header["X-Init-Page"]; ok {
+		initialBody = initialPage[0]
+	}
+
+	ctx := templ.WithChildren(context.Background(), c.pageFromName(initialBody))
+	component.
+		Base(c.alpinejsUrl, c.htmxUrl).
+		Render(ctx, w)
 	return nil
 }
 
 func (c Controller) ServePage(w http.ResponseWriter, r *http.Request) error {
-	var child templ.Component
-	switch chi.URLParam(r, "page") {
-	case "home":
-		child = component.Home()
-	case "park":
-		child = component.Park()
-	default:
-		return c.NotFound(w, r)
+	name := chi.URLParam(r, "page")
+
+	// Since this webapp uses HTMX, the request with Hx-Request means that
+	// the base had already been loaded as it uses HTMX to request the HTML
+	// fragment it needs
+	//
+	// Not fully fool-proof as it could be "spoofed", but this will do
+	if _, isHtmx := r.Header["Hx-Request"]; !isHtmx {
+		r.Header.Add("X-Init-Page", name)
+		return c.ServeBase(w, r)
 	}
 
-	ctx := templ.WithChildren(context.Background(), child)
-	component.Base(c.alpinejsUrl, c.htmxUrl).Render(ctx, w)
+	c.
+		pageFromName(name).
+		Render(context.Background(), w)
+	return nil
+}
+
+func (c Controller) NotFound(w http.ResponseWriter, r *http.Request) error {
+	page.NotFound().Render(context.Background(), w)
+	w.WriteHeader(http.StatusNotFound)
 	return nil
 }

@@ -28,7 +28,7 @@ func (r Router) UseOn(parent *chi.Mux) {
 			http.FileServer(http.Dir("./static"))).ServeHTTP)
 
 	router.Get("/{page}", reqres.HttpHandlerWithError(r.handler.ServePage))
-	router.Get("/", reqres.HttpHandlerWithError(r.handler.RedirectToHome))
+	router.Get("/", reqres.HttpHandlerWithError(r.handler.ServeBase))
 	router.NotFound(reqres.HttpHandlerWithError(r.handler.NotFound))
 	parent.Mount("/", router)
 }

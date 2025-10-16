@@ -7,7 +7,36 @@ templ Base(alpinejsUrl, htmxUrl string) {
             <script src={htmxUrl}></script>
         </head>
         <body>
-            {children...}
+            <div>
+                <button
+                    hx-trigger="click"
+                    hx-get="/home"
+                    hx-target="#target"
+                    hx-swap="innerHTML"
+                > Load home </button>
+            </div>
+
+            <div>
+                <button
+                    hx-trigger="click"
+                    hx-get="/park"
+                    hx-target="#target"
+                    hx-swap="innerHTML"
+                > Load Park </button>
+            </div>
+
+            <div>
+                <button
+                    hx-trigger="click"
+                    hx-get="/asjalsjlas"
+                    hx-target="#target"
+                    hx-swap="innerHTML"
+                > Load not found </button>
+            </div>
+
+            <div id="target"> 
+                {children...}
+            </div>
         </body>
     </html>
 }

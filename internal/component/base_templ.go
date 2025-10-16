@@ -55,7 +55,7 @@ func Base(alpinejsUrl, htmxUrl string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\"></script></head><body>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\"></script></head><body><div><button hx-trigger=\"click\" hx-get=\"/home\" hx-target=\"#target\" hx-swap=\"innerHTML\">Load home </button></div><div><button hx-trigger=\"click\" hx-get=\"/park\" hx-target=\"#target\" hx-swap=\"innerHTML\">Load Park </button></div><div><button hx-trigger=\"click\" hx-get=\"/asjalsjlas\" hx-target=\"#target\" hx-swap=\"innerHTML\">Load not found </button></div><div id=\"target\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -63,7 +63,7 @@ func Base(alpinejsUrl, htmxUrl string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</div></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
