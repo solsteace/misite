@@ -33,3 +33,6 @@ go.work.sum
 
 # Custom
 tmp/
+static/vendor/**
+!static/vendor/.gitkeep
+

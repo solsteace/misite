@@ -28,7 +28,7 @@ func Run() {
 	app := chi.NewRouter()
 	store := persistence.NewPg(dbConn)
 	service := service.NewService(&store)
-	controller := controller.NewController(service)
+	controller := controller.NewController(service, aLPINE_URL, hTMX_URL)
 
 	app.Use(middleware.RequestID)
 	app.Use(middleware.Logger)

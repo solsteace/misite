@@ -1,12 +1,10 @@
 package component
 
-import "io"
-import "context"
-
-templ base() {
+templ Base(alpinejsUrl, htmxUrl string) {
     <html>
         <head>
-            <script defer src="/static/alpine-3.15.js"></script>
+            <script defer src={alpinejsUrl}></script>
+            <script src={htmxUrl}></script>
         </head>
         <body>
             {children...}
@@ -20,9 +18,4 @@ templ Home() {
 
 templ Park() {
     <h1 x-data="{ message: 'Hello' }" x-text="message"></h1>
-}
-
-func RenderBaseTo(w io.Writer, child templ.Component) {
-    ctx := templ.WithChildren(context.Background(), child) 
-    base().Render(ctx, w)
 }
