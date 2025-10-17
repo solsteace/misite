@@ -1,7 +1,10 @@
 root = "."
 
 [build]
-    cmd = "go build -o ./tmp/out ./cmd"
+    include_ext = ["go", "templ"]
+    exclude_dir = ["static"]
+    exclude_regex = [".*_templ.go"]
+    cmd = "templ generate & go build -o ./tmp/out ./cmd"
     bin = "./tmp/out"
 [log]
     time = true
