@@ -31,8 +31,17 @@ go.work.sum
 # .idea/
 # .vscode/
 
+
+# =======================
 # Custom
+# =======================
+# Temporary files
 tmp/
+
+# Static files
 static/vendor/**
 !static/vendor/.gitkeep
+
+# Generated files
+**/*_templ.go
 
