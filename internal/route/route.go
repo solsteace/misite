@@ -27,8 +27,12 @@ func (r Router) UseOn(parent *chi.Mux) {
 			"/static/",
 			http.FileServer(http.Dir("./static"))).ServeHTTP)
 
-	router.Get("/{page}", reqres.HttpHandlerWithError(r.handler.ServePage))
-	router.Get("/", reqres.HttpHandlerWithError(r.handler.ServeBase))
+	router.Get("/project/{id}", reqres.HttpHandlerWithError(r.handler.Project))
+	router.Get("/article/{id}", reqres.HttpHandlerWithError(r.handler.Article))
+	router.Get("/articles", reqres.HttpHandlerWithError(r.handler.Articles))
+	router.Get("/projects", reqres.HttpHandlerWithError(r.handler.Projects))
+	router.Get("/home", reqres.HttpHandlerWithError(r.handler.Home))
+	router.Get("/", reqres.HttpHandlerWithError(r.handler.Home))
 	router.NotFound(reqres.HttpHandlerWithError(r.handler.NotFound))
 	parent.Mount("/", router)
 }

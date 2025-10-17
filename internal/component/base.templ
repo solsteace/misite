@@ -7,44 +7,41 @@ templ Base(alpinejsUrl, htmxUrl string) {
             <script src={htmxUrl}></script>
         </head>
         <body>
-            <div>
-                <button
-                    hx-trigger="click"
-                    hx-get="/home"
-                    hx-target="#target"
-                    hx-swap="innerHTML"
-                > Load home </button>
-            </div>
-
-            <div>
-                <button
-                    hx-trigger="click"
-                    hx-get="/park"
-                    hx-target="#target"
-                    hx-swap="innerHTML"
-                > Load Park </button>
-            </div>
-
-            <div>
-                <button
-                    hx-trigger="click"
-                    hx-get="/asjalsjlas"
-                    hx-target="#target"
-                    hx-swap="innerHTML"
-                > Load not found </button>
-            </div>
+            <nav>
+                <ul>
+                    <li>
+                        <button
+                            hx-trigger="click"
+                            hx-get="/home"
+                            hx-target="#target"
+                            hx-swap="innerHTML"
+                            hx-replace-url="true"
+                        > Home </button>
+                    </li>
+                    <li>
+                        <button
+                            hx-trigger="click"
+                            hx-get="/projects"
+                            hx-target="#target"
+                            hx-swap="innerHTML"
+                            hx-replace-url="true"
+                        > Projects </button>
+                    </li>
+                    <li>
+                        <button
+                            hx-trigger="click"
+                            hx-get="/articles"
+                            hx-target="#target"
+                            hx-swap="innerHTML"
+                            hx-replace-url="true"
+                        > Articles </button>
+                    </li>
+                </ul>
+            </nav>
 
             <div id="target"> 
                 {children...}
             </div>
         </body>
     </html>
-}
-
-templ Home() {
-    <h1 x-data="{ message: 'I ❤️ Alpine' }" x-text="message"></h1>
-}
-
-templ Park() {
-    <h1 x-data="{ message: 'Hello' }" x-text="message"></h1>
 }
