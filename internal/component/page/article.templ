@@ -5,6 +5,8 @@ import "github.com/solsteace/misite/internal/entity"
 templ Article(article entity.Article) {
     <div> 
         <article>
+            <img src={article.Thumbnail}/>
+
             <h1> {article.Title} </h1>
             <p> {article.Subtitle} </p>
             <div style="display: flex; gap: 5px;">

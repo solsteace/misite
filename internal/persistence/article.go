@@ -20,6 +20,7 @@ type pgArticles struct {
 	Id        int       `db:"id"`
 	Title     string    `db:"title"`
 	Subtitle  string    `db:"subtitle"`
+	Thumbnail string    `db:"thumbnail"`
 	CreatedAt time.Time `db:"created_at"`
 
 	Serie *PgSerie
@@ -38,6 +39,7 @@ func (p Pg) Articles(param ArticlesQueryParam) ([]entity.Article, error) {
 			articles.id AS "id",
 			articles.title AS "title",
 			articles.subtitle AS "subtitle",
+			articles.thumbnail AS "thumbnail",
 			articles.created_at AS "created_at",
 			tags.id AS "tag.id",
 			tags.name AS "tag.name",
@@ -118,6 +120,7 @@ type pgArticle struct {
 	Title     string    `db:"title"`
 	Subtitle  string    `db:"subtitle"`
 	Content   string    `db:"content"`
+	Thumbnail string    `db:"thumbnail"`
 	CreatedAt time.Time `db:"created_at"`
 
 	Serie        *PgSerie
@@ -133,6 +136,7 @@ func (p Pg) Article(id int) (entity.Article, error) {
 			articles.title AS "title",
 			articles.subtitle AS "subtitle",
 			articles.content AS "content",
+			articles.thumbnail AS "thumbnail",
 			articles.created_at AS "created_at",
 			article_series."order" AS "orderInSerie",
 			tags.id AS "tag.id",

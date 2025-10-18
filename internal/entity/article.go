@@ -8,6 +8,7 @@ type Article struct {
 	Title     string
 	Subtitle  string
 	Content   string
+	Thumbnail string
 	CreatedAt time.Time
 
 	Serie *Serie // an article series that accompanies the project, if any (some kind of devblog, if you will)
