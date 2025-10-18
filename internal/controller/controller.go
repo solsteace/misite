@@ -3,8 +3,10 @@ package controller
 import (
 	"context"
 	"net/http"
+	"strconv"
 
 	"github.com/a-h/templ"
+	"github.com/go-chi/chi/v5"
 	"github.com/solsteace/misite/internal/component"
 	"github.com/solsteace/misite/internal/component/page"
 	"github.com/solsteace/misite/internal/service"
@@ -62,7 +64,12 @@ func (c Controller) Home(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (c Controller) Articles(w http.ResponseWriter, r *http.Request) error {
-	pageComponent := page.ArticleList()
+	articles, err := c.service.Articles(1, 10)
+	if err != nil {
+		return err
+	}
+
+	pageComponent := page.ArticleList(articles)
 	if c.requestNeedsBase(r) {
 		return c.serveWithBase(pageComponent, w, r)
 	}
@@ -71,7 +78,17 @@ func (c Controller) Articles(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (c Controller) Article(w http.ResponseWriter, r *http.Request) error {
-	pageComponent := page.Article()
+	articleId, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, strconv.IntSize)
+	if err != nil {
+		return err
+	}
+
+	article, err := c.service.Article(int(articleId))
+	if err != nil {
+		return err
+	}
+
+	pageComponent := page.Article(article)
 	if c.requestNeedsBase(r) {
 		return c.serveWithBase(pageComponent, w, r)
 	}

@@ -1,7 +1,21 @@
 package page
 
-templ Article() {
+import "github.com/solsteace/misite/internal/entity"
+
+templ Article(article entity.Article) {
     <div> 
-        <h2> You're viewing an article! </h2>
+        <article>
+            <h1> {article.Title} </h1>
+            <p> {article.Subtitle} </p>
+            <div style="display: flex; gap: 5px;">
+                <b> Tags </b>
+                for _, tag := range article.Tag {
+                    <div> {tag.Name} </div>
+                }
+            </div>
+
+            @templ.Raw(article.Content)
+        </article>
+
     </div>
 }

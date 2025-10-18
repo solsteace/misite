@@ -6,34 +6,31 @@ templ Base(alpinejsUrl, htmxUrl string) {
             <script defer src={alpinejsUrl}></script>
             <script src={htmxUrl}></script>
         </head>
-        <body>
-            <nav>
+        <body
+            hx-push-url="true"
+            hx-replace-url="true"
+        >
+            <nav
+                hx-target="#target"
+                hx-swap="innerHTML"
+            >
                 <ul>
                     <li>
                         <button
                             hx-trigger="click"
                             hx-get="/home"
-                            hx-target="#target"
-                            hx-swap="innerHTML"
-                            hx-replace-url="true"
                         > Home </button>
                     </li>
                     <li>
                         <button
                             hx-trigger="click"
                             hx-get="/projects"
-                            hx-target="#target"
-                            hx-swap="innerHTML"
-                            hx-replace-url="true"
                         > Projects </button>
                     </li>
                     <li>
                         <button
                             hx-trigger="click"
                             hx-get="/articles"
-                            hx-target="#target"
-                            hx-swap="innerHTML"
-                            hx-replace-url="true"
                         > Articles </button>
                     </li>
                 </ul>
