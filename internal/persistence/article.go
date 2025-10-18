@@ -1,6 +1,7 @@
 package persistence
 
 import (
+	"database/sql"
 	"fmt"
 	"time"
 
@@ -23,8 +24,14 @@ type pgArticles struct {
 	Thumbnail string    `db:"thumbnail"`
 	CreatedAt time.Time `db:"created_at"`
 
-	Serie *PgSerie
-	Tag   PgTag
+	Serie struct {
+		Id   sql.Null[int]    `db:"id"`
+		Name sql.Null[string] `db:"name"`
+	}
+	Tag struct {
+		Id   sql.Null[int]    `db:"id"`
+		Name sql.Null[string] `db:"name"`
+	}
 }
 
 func (p Pg) Articles(param ArticlesQueryParam) ([]entity.Article, error) {
@@ -89,29 +96,33 @@ func (p Pg) Articles(param ArticlesQueryParam) ([]entity.Article, error) {
 	}
 
 	var articles []entity.Article
-	var currentArticle entity.Article
+	var article entity.Article
 	for i, r := range rows {
-		if currentArticle.Id != r.Id {
+		if article.Id != r.Id {
 			if i != 0 {
-				articles = append(articles, currentArticle)
+				articles = append(articles, article)
 			}
-			currentArticle = entity.Article{
+
+			article = entity.Article{
 				Id:        r.Id,
 				Title:     r.Title,
 				Subtitle:  r.Subtitle,
-				CreatedAt: r.CreatedAt,
-				Serie: &entity.Serie{
-					Id:   r.Serie.Id,
-					Name: r.Serie.Name}}
+				CreatedAt: r.CreatedAt}
+
+			if r.Serie.Id.Valid {
+				article.Serie = &entity.Serie{
+					Id:   r.Serie.Id.V,
+					Name: r.Serie.Name.V}
+			}
 		}
 
-		tag := entity.Tag{
-			Id:   r.Tag.Id,
-			Name: r.Tag.Name}
-		currentArticle.Tag = append(currentArticle.Tag, tag)
+		if r.Tag.Id.Valid {
+			article.Tag = append(article.Tag, entity.Tag{
+				Id:   r.Tag.Id.V,
+				Name: r.Tag.Name.V})
+		}
 	}
-	articles = append(articles, currentArticle)
-
+	articles = append(articles, article)
 	return articles, nil
 }
 
@@ -123,10 +134,11 @@ type pgArticle struct {
 	Thumbnail string    `db:"thumbnail"`
 	CreatedAt time.Time `db:"created_at"`
 
-	Serie        *PgSerie
-	OrderInSerie int `db:"orderInSerie"`
-
-	Tag PgTag
+	Serie sql.Null[int] `db:"serie.id"`
+	Tag   struct {
+		Id   sql.Null[int]    `db:"id"`
+		Name sql.Null[string] `db:"name"`
+	}
 }
 
 func (p Pg) Article(id int) (entity.Article, error) {
@@ -138,11 +150,9 @@ func (p Pg) Article(id int) (entity.Article, error) {
 			articles.content AS "content",
 			articles.thumbnail AS "thumbnail",
 			articles.created_at AS "created_at",
-			article_series."order" AS "orderInSerie",
 			tags.id AS "tag.id",
 			tags.name AS "tag.name",
-			series.id AS "serie.id",
-			series.name AS "serie.name"
+			series.id AS "serie.id"
 		FROM articles
 		LEFT JOIN article_series ON articles.id = article_series.article_id
 		LEFT JOIN series ON article_series.serie_id = series.id
@@ -167,13 +177,16 @@ func (p Pg) Article(id int) (entity.Article, error) {
 		Content:   articleRow.Content,
 		CreatedAt: articleRow.CreatedAt}
 	for _, r := range rows {
-		article.Serie = &entity.Serie{
-			Id:   r.Serie.Id,
-			Name: r.Serie.Name}
-		tag := entity.Tag{
-			Id:   r.Tag.Id,
-			Name: r.Tag.Name}
-		article.Tag = append(article.Tag, tag)
+		if r.Serie.Valid {
+			article.Serie = &entity.Serie{
+				Id: r.Serie.V}
+		}
+
+		if r.Tag.Id.Valid {
+			article.Tag = append(article.Tag, entity.Tag{
+				Id:   r.Tag.Id.V,
+				Name: r.Tag.Name.V})
+		}
 	}
 	return article, nil
 }
