@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -64,7 +65,7 @@ func (c Controller) Home(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (c Controller) Articles(w http.ResponseWriter, r *http.Request) error {
-	articles, err := c.service.Articles(1, 10)
+	articles, err := c.service.Articles(1, 10) // TODO: adapt to user input
 	if err != nil {
 		return err
 	}
@@ -97,7 +98,12 @@ func (c Controller) Article(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (c Controller) Projects(w http.ResponseWriter, r *http.Request) error {
-	pageComponent := page.ProjectList()
+	projects, err := c.service.Projects(1, 10) // TODO: adapt to user input
+	if err != nil {
+		return err
+	}
+
+	pageComponent := page.ProjectList(projects)
 	if c.requestNeedsBase(r) {
 		return c.serveWithBase(pageComponent, w, r)
 	}
@@ -106,7 +112,18 @@ func (c Controller) Projects(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (c Controller) Project(w http.ResponseWriter, r *http.Request) error {
-	pageComponent := page.Project()
+	projectId, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, strconv.IntSize)
+	if err != nil {
+		return err
+	}
+
+	project, err := c.service.Project(int(projectId))
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("%+v", project)
+	pageComponent := page.Project(project)
 	if c.requestNeedsBase(r) {
 		return c.serveWithBase(pageComponent, w, r)
 	}

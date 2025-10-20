@@ -1,7 +1,28 @@
 package page
 
-templ ProjectList() {
-    <div> 
-        <h2> You're viewing the list of projects!  </h2>
+import "github.com/solsteace/misite/internal/entity"
+import "fmt"
+
+templ ProjectList(project []entity.Project) {
+    <div
+        hx-target="#target"
+        hx-swap="innerHTML"
+    > 
+        for _, p := range project {
+            <div 
+                style="border: 1px solid black;"
+                hx-trigger="click"
+                hx-get={fmt.Sprintf("/project/%d", p.Id)}
+            >
+                <img src={p.Thumbnail}>
+                <b> {p.Name} </b>
+                <p> {p.Synopsis} </p>
+                <div>
+                    for _, t := range p.Tag {
+                        <div> {t.Name} </div>
+                    }
+                </div>
+            </div>
+        }
     </div>
 }

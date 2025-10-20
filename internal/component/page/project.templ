@@ -1,7 +1,35 @@
 package page
 
-templ Project() {
+import "github.com/solsteace/misite/internal/entity"
+
+templ Project(project entity.Project) {
     <div>
-        <h2> You're viewing a specific project! </h2>
+        <div>
+            <img src={project.Thumbnail} />
+        </div>
+        <div>
+            <div>
+                <h1> {project.Name} </h1>
+                <p> {project.Synopsis} </p>
+                <div> {project.Description} </div>
+            </div>
+        </div>
+        <div>
+            if len(project.Tag) > 0 {
+                for _, t := range project.Tag {
+                    <div> {t.Name} </div>
+                }
+            }
+
+            if project.Serie != nil {
+                <a href="/"> Featured Serie </a> // TODO: link serie here
+            }
+
+            if len(project.Link) > 0 {
+                for _, l := range project.Link {
+                    <a href={l.Url}> {l.DisplayText} </a>
+                }
+            }
+        </div>
     </div>
 }
