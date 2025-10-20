@@ -63,66 +63,63 @@ func (p Pg) Articles(param ArticlesQueryParam) ([]entity.Article, error) {
 	args := []any{
 		param.Limit,
 		(param.Page - 1) * param.Limit}
-	fmt.Println(args...)
 
 	if len(param.TagId) > 0 {
 		query = fmt.Sprintf("%s WHERE article_tags.id IN (?)", query)
 		queryTagFilter, argsTagFilter, err := sqlx.In(query, param.TagId)
 		if err != nil {
-			return []entity.Article{}, err
+			return []entity.Article{}, fmt.Errorf(
+				"persistence<Pg.Articles>: %s", err)
 		}
-
 		query = queryTagFilter
 		args = append(args, argsTagFilter...)
 	}
-
 	if len(param.SerieId) > 0 {
 		query = fmt.Sprintf("%s WHERE article_series.id IN (?)", query)
 		querySerieFilter, argsSerieFilter, err := sqlx.In(query, param.SerieId)
 		if err != nil {
-			return []entity.Article{}, err
+			return []entity.Article{}, fmt.Errorf(
+				"persistence<Pg.Articles>: %s", err)
 		}
-
 		query = querySerieFilter
 		args = append(args, argsSerieFilter...)
 	}
 
 	var rows []pgArticles
 	if err := p.db.Select(&rows, p.db.Rebind(query), args...); err != nil {
-		return []entity.Article{}, err
-	}
-	if len(rows) == 0 {
+		return []entity.Article{}, fmt.Errorf(
+			"persistence<Pg.Articles>: %s", err)
+	} else if len(rows) == 0 {
 		return []entity.Article{}, nil
 	}
 
 	var articles []entity.Article
-	var article entity.Article
-	for i, r := range rows {
-		if article.Id != r.Id {
-			if i != 0 {
-				articles = append(articles, article)
-			}
-
-			article = entity.Article{
+	var lastArticle *entity.Article
+	var insertedTags map[int]struct{}
+	for _, r := range rows {
+		if lastArticle == nil || lastArticle.Id != r.Id {
+			insertedTags = map[int]struct{}{}
+			articles = append(articles, entity.Article{
 				Id:        r.Id,
 				Title:     r.Title,
 				Subtitle:  r.Subtitle,
-				CreatedAt: r.CreatedAt}
-
-			if r.Serie.Id.Valid {
-				article.Serie = &entity.Serie{
-					Id:   r.Serie.Id.V,
-					Name: r.Serie.Name.V}
+				CreatedAt: r.CreatedAt})
+			lastArticle = &articles[len(articles)-1]
+		}
+		if r.Serie.Id.Valid {
+			lastArticle.Serie = &entity.Serie{
+				Id:   r.Serie.Id.V,
+				Name: r.Serie.Name.V}
+		}
+		if r.Tag.Id.Valid {
+			if _, ok := insertedTags[r.Tag.Id.V]; !ok {
+				insertedTags[r.Tag.Id.V] = struct{}{}
+				lastArticle.Tag = append(lastArticle.Tag, entity.Tag{
+					Id:   r.Tag.Id.V,
+					Name: r.Tag.Name.V})
 			}
 		}
-
-		if r.Tag.Id.Valid {
-			article.Tag = append(article.Tag, entity.Tag{
-				Id:   r.Tag.Id.V,
-				Name: r.Tag.Name.V})
-		}
 	}
-	articles = append(articles, article)
 	return articles, nil
 }
 
@@ -160,32 +157,35 @@ func (p Pg) Article(id int) (entity.Article, error) {
 		LEFT JOIN tags ON article_tags.tag_id = tags.id
 		WHERE articles.id = $1
 		ORDER BY articles.id`
-	rows := []pgArticle{}
 	args := []any{id}
+	var rows []pgArticle
 	if err := p.db.Select(&rows, query, args...); err != nil {
-		return entity.Article{}, err
-	}
-	if len(rows) == 0 {
-		return entity.Article{}, oops.NotFound{}
+		return entity.Article{}, fmt.Errorf(
+			"persistence<Pg.Article>: %w", err)
+	} else if len(rows) == 0 {
+		return entity.Article{}, fmt.Errorf(
+			"persistence<Pg.Article>: %w", oops.NotFound{})
 	}
 
-	articleRow := rows[0]
 	article := entity.Article{
-		Id:        articleRow.Id,
-		Title:     articleRow.Title,
-		Subtitle:  articleRow.Subtitle,
-		Content:   articleRow.Content,
-		CreatedAt: articleRow.CreatedAt}
+		Id:        rows[0].Id,
+		Title:     rows[0].Title,
+		Subtitle:  rows[0].Subtitle,
+		Content:   rows[0].Content,
+		CreatedAt: rows[0].CreatedAt}
+	insertedTags := map[int]struct{}{}
 	for _, r := range rows {
 		if r.Serie.Valid {
 			article.Serie = &entity.Serie{
 				Id: r.Serie.V}
 		}
-
 		if r.Tag.Id.Valid {
-			article.Tag = append(article.Tag, entity.Tag{
-				Id:   r.Tag.Id.V,
-				Name: r.Tag.Name.V})
+			if _, ok := insertedTags[r.Tag.Id.V]; !ok {
+				insertedTags[r.Tag.Id.V] = struct{}{}
+				article.Tag = append(article.Tag, entity.Tag{
+					Id:   r.Tag.Id.V,
+					Name: r.Tag.Name.V})
+			}
 		}
 	}
 	return article, nil
