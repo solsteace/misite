@@ -48,10 +48,13 @@ func (p Pg) Articles(param ArticlesQueryParam) ([]entity.Article, error) {
 					article_id, 
 					COUNT(DISTINCT tag_id) AS "n_tag"
 				FROM article_tags
-				WHERE tag_id = ANY($1)
+				WHERE 
+					($1::int[] IS NULL) 
+					OR tag_id = ANY($1)
 				GROUP BY article_id
 				HAVING
-					COUNT(tag_id) = CARDINALITY($1)
+					($1::int[] IS NULL)
+					OR COUNT(tag_id) = CARDINALITY($1)
 				LIMIT $3 OFFSET $4)
 		SELECT
 			articles.id AS "id",
@@ -69,11 +72,9 @@ func (p Pg) Articles(param ArticlesQueryParam) ([]entity.Article, error) {
 		LEFT JOIN article_series ON article_series.article_id = articles.id
 		LEFT JOIN series ON article_series.serie_id = series.id
 		WHERE 
-			(
-				($1::int[] IS NULL)
-				OR (SELECT true
-					FROM matching_articles_by_tag
-					WHERE matching_articles_by_tag.article_id = articles.id))
+			(SELECT true
+				FROM matching_articles_by_tag
+				WHERE matching_articles_by_tag.article_id = articles.id)
 			AND ($2::int[] IS NULL OR article_series.serie_id = ANY($2))
 		ORDER BY articles.id`
 	args := []any{

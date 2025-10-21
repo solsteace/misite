@@ -40,10 +40,13 @@ func (p Pg) Projects(param ProjectsQueryParam) ([]entity.Project, error) {
 				project_id, 
 				COUNT(DISTINCT tag_id) AS "n_tag"
 			FROM project_tags
-			WHERE tag_id = ANY($1)
+			WHERE 
+				($1::int[] IS NULL)
+				OR tag_id = ANY($1)
 			GROUP BY project_id
 			HAVING
-				COUNT(tag_id) = CARDINALITY($1)
+				($1::int[] IS NULL)
+				OR COUNT(tag_id) = CARDINALITY($1)
 			LIMIT $2 OFFSET $3)
 		SELECT
 			projects.id AS "id",
@@ -56,10 +59,9 @@ func (p Pg) Projects(param ProjectsQueryParam) ([]entity.Project, error) {
 		LEFT JOIN project_tags ON project_tags.project_id = projects.id
 		LEFT JOIN tags ON project_tags.tag_id = tags.id
 		WHERE
-			($1::int[] IS NULL)
-			OR (SELECT true
-				FROM matching_projects_by_tag
-				WHERE matching_projects_by_tag.project_id = projects.id)
+			(SELECT true
+			FROM matching_projects_by_tag
+			WHERE matching_projects_by_tag.project_id = projects.id)
 		ORDER BY projects.id`
 	args := []any{
 		nil,
