@@ -20,7 +20,7 @@ templ ArticleList(article []entity.Article) {
 
                 <b> {a.Title} </b>
                 <p> {a.Subtitle} </p>
-                
+
                 for _, t := range a.Tag {
                     <div> {t.Name} </div>
                 }

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/solsteace/misite/internal/entity"
 	"github.com/solsteace/misite/internal/utility/lib/oops"
 )
@@ -41,7 +40,19 @@ func (p Pg) Articles(param ArticlesQueryParam) ([]entity.Article, error) {
 	if param.Page < 1 {
 		param.Page = 1
 	}
+
 	query := `
+		WITH 
+			matching_articles_by_tag AS ( 
+				SELECT 
+					article_id, 
+					COUNT(DISTINCT tag_id) AS "n_tag"
+				FROM article_tags
+				WHERE tag_id = ANY($1)
+				GROUP BY article_id
+				HAVING
+					COUNT(tag_id) = CARDINALITY($1)
+				LIMIT $3 OFFSET $4)
 		SELECT
 			articles.id AS "id",
 			articles.title AS "title",
@@ -53,40 +64,32 @@ func (p Pg) Articles(param ArticlesQueryParam) ([]entity.Article, error) {
 			series.id AS "serie.id",
 			series.name AS "serie.name"
 		FROM articles
-		LEFT JOIN article_series ON articles.id = article_series.article_id
-		LEFT JOIN series ON article_series.serie_id = series.id
-		LEFT JOIN article_tags ON articles.id = article_tags.article_id
+		LEFT JOIN article_tags ON article_tags.article_id = articles.id
 		LEFT JOIN tags ON article_tags.tag_id = tags.id
-		ORDER BY articles.id
-		LIMIT $1
-		OFFSET $2`
+		LEFT JOIN article_series ON article_series.article_id = articles.id
+		LEFT JOIN series ON article_series.serie_id = series.id
+		WHERE 
+			(
+				($1::int[] IS NULL)
+				OR (SELECT true
+					FROM matching_articles_by_tag
+					WHERE matching_articles_by_tag.article_id = articles.id))
+			AND ($2::int[] IS NULL OR article_series.serie_id = ANY($2))
+		ORDER BY articles.id`
 	args := []any{
+		nil,
+		nil,
 		param.Limit,
 		(param.Page - 1) * param.Limit}
-
 	if len(param.TagId) > 0 {
-		query = fmt.Sprintf("%s WHERE article_tags.id IN (?)", query)
-		queryTagFilter, argsTagFilter, err := sqlx.In(query, param.TagId)
-		if err != nil {
-			return []entity.Article{}, fmt.Errorf(
-				"persistence<Pg.Articles>: %s", err)
-		}
-		query = queryTagFilter
-		args = append(args, argsTagFilter...)
+		args[0] = param.TagId
 	}
 	if len(param.SerieId) > 0 {
-		query = fmt.Sprintf("%s WHERE article_series.id IN (?)", query)
-		querySerieFilter, argsSerieFilter, err := sqlx.In(query, param.SerieId)
-		if err != nil {
-			return []entity.Article{}, fmt.Errorf(
-				"persistence<Pg.Articles>: %s", err)
-		}
-		query = querySerieFilter
-		args = append(args, argsSerieFilter...)
+		args[1] = param.SerieId
 	}
 
 	var rows []pgArticles
-	if err := p.db.Select(&rows, p.db.Rebind(query), args...); err != nil {
+	if err := p.db.Select(&rows, query, args...); err != nil {
 		return []entity.Article{}, fmt.Errorf(
 			"persistence<Pg.Articles>: %s", err)
 	} else if len(rows) == 0 {

@@ -15,9 +15,8 @@ func NewService(store *persistence.Pg) Service {
 	return Service{store: store}
 }
 
-func (s Service) Articles(page, limit int) ([]entity.Article, error) {
-	articles, err := s.store.Articles(persistence.ArticlesQueryParam{
-		Page: page, Limit: limit})
+func (s Service) Articles(param persistence.ArticlesQueryParam) ([]entity.Article, error) {
+	articles, err := s.store.Articles(param)
 	if err != nil {
 		return []entity.Article{}, fmt.Errorf(
 			"service<Service.Articles>: %w", err)
@@ -34,9 +33,8 @@ func (s Service) Article(id int) (entity.Article, error) {
 	return article, nil
 }
 
-func (s Service) Projects(page, limit int) ([]entity.Project, error) {
-	projects, err := s.store.Projects(persistence.ProjectsQueryParam{
-		Page: page, Limit: limit})
+func (s Service) Projects(param persistence.ProjectsQueryParam) ([]entity.Project, error) {
+	projects, err := s.store.Projects(param)
 	if err != nil {
 		return []entity.Project{}, fmt.Errorf(
 			"service<Service.Projects>: %w", err)

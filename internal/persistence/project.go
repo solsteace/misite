@@ -9,10 +9,9 @@ import (
 )
 
 type ProjectsQueryParam struct {
-	Page    int
-	Limit   int
-	TagId   []int
-	SerieId []int
+	Page  int
+	Limit int
+	TagId []int
 }
 
 type pgProjects struct {
@@ -34,7 +33,18 @@ func (p Pg) Projects(param ProjectsQueryParam) ([]entity.Project, error) {
 	if param.Page < 1 {
 		param.Page = 1
 	}
+
 	query := `
+		WITH matching_projects_by_tag AS(
+			SELECT 
+				project_id, 
+				COUNT(DISTINCT tag_id) AS "n_tag"
+			FROM project_tags
+			WHERE tag_id = ANY($1)
+			GROUP BY project_id
+			HAVING
+				COUNT(tag_id) = CARDINALITY($1)
+			LIMIT $2 OFFSET $3)
 		SELECT
 			projects.id AS "id",
 			projects.name AS "name",
@@ -45,12 +55,20 @@ func (p Pg) Projects(param ProjectsQueryParam) ([]entity.Project, error) {
 		FROM projects
 		LEFT JOIN project_tags ON project_tags.project_id = projects.id
 		LEFT JOIN tags ON project_tags.tag_id = tags.id
-		ORDER BY projects.id
-		LIMIT $1
-		OFFSET $2`
+		WHERE
+			($1::int[] IS NULL)
+			OR (SELECT true
+				FROM matching_projects_by_tag
+				WHERE matching_projects_by_tag.project_id = projects.id)
+		ORDER BY projects.id`
 	args := []any{
+		nil,
 		param.Limit,
 		(param.Page - 1) * param.Limit}
+	if len(param.TagId) > 0 {
+		args[0] = param.TagId
+	}
+
 	var rows []pgProjects
 	if err := p.db.Select(&rows, query, args...); err != nil {
 		return []entity.Project{}, fmt.Errorf(
@@ -59,9 +77,9 @@ func (p Pg) Projects(param ProjectsQueryParam) ([]entity.Project, error) {
 		return []entity.Project{}, nil
 	}
 
-	var insertedTag map[int]struct{}
 	var projects []entity.Project
 	var lastProject *entity.Project
+	var insertedTag map[int]struct{}
 	for _, r := range rows {
 		if lastProject == nil || lastProject.Id != r.Id {
 			insertedTag = map[int]struct{}{}

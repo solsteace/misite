@@ -10,7 +10,12 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/solsteace/misite/internal/component"
 	"github.com/solsteace/misite/internal/component/page"
+	"github.com/solsteace/misite/internal/persistence"
 	"github.com/solsteace/misite/internal/service"
+)
+
+const (
+	dEFAULT_PAGE_SIZE = 10
 )
 
 type Controller struct {
@@ -65,7 +70,53 @@ func (c Controller) Home(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (c Controller) Articles(w http.ResponseWriter, r *http.Request) error {
-	articles, err := c.service.Articles(1, 10) // TODO: adapt to user input
+	urlQuery := r.URL.Query()
+	param := persistence.ArticlesQueryParam{}
+	if sPage := urlQuery.Get("page"); sPage != "" {
+		nPage, err := strconv.ParseInt(sPage, 10, strconv.IntSize)
+		if err != nil {
+			return err
+		} else if nPage < 0 {
+			nPage = 0
+		}
+		param.Page = int(nPage)
+	}
+	if sLimit := urlQuery.Get("limit"); sLimit != "" {
+		nLimit, err := strconv.ParseInt(sLimit, 10, strconv.IntSize)
+		if err != nil {
+			return err
+		} else if nLimit < 0 {
+			nLimit = dEFAULT_PAGE_SIZE
+		}
+		param.Limit = int(nLimit)
+	}
+
+	for _, id := range urlQuery["tagId"] {
+		if id == "" {
+			continue
+		}
+
+		nId, err := strconv.ParseInt(id, 10, strconv.IntSize)
+		if err != nil {
+			return err
+		} else if nId > 0 {
+			param.TagId = append(param.TagId, int(nId))
+		}
+	}
+	for _, id := range urlQuery["serieId"] {
+		if id == "" {
+			continue
+		}
+
+		nId, err := strconv.ParseInt(id, 10, strconv.IntSize)
+		if err != nil {
+			return err
+		} else if nId > 0 {
+			param.SerieId = append(param.SerieId, int(nId))
+		}
+	}
+
+	articles, err := c.service.Articles(param)
 	if err != nil {
 		return err
 	}
@@ -98,7 +149,41 @@ func (c Controller) Article(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (c Controller) Projects(w http.ResponseWriter, r *http.Request) error {
-	projects, err := c.service.Projects(1, 10) // TODO: adapt to user input
+	urlQuery := r.URL.Query()
+	param := persistence.ProjectsQueryParam{}
+	if sPage := urlQuery.Get("page"); sPage != "" {
+		nPage, err := strconv.ParseInt(sPage, 10, strconv.IntSize)
+		if err != nil {
+			return err
+		} else if nPage < 0 {
+			nPage = 0
+		}
+		param.Page = int(nPage)
+	}
+	if sLimit := urlQuery.Get("limit"); sLimit != "" {
+		nLimit, err := strconv.ParseInt(sLimit, 10, strconv.IntSize)
+		if err != nil {
+			return err
+		} else if nLimit < 0 {
+			nLimit = dEFAULT_PAGE_SIZE
+		}
+		param.Limit = int(nLimit)
+	}
+
+	for _, id := range urlQuery["tagId"] {
+		if id == "" {
+			continue
+		}
+
+		nId, err := strconv.ParseInt(id, 10, strconv.IntSize)
+		if err != nil {
+			return err
+		} else if nId > 0 {
+			param.TagId = append(param.TagId, int(nId))
+		}
+	}
+
+	projects, err := c.service.Projects(param)
 	if err != nil {
 		return err
 	}
