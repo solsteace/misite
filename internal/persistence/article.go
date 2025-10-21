@@ -106,6 +106,7 @@ func (p Pg) Articles(param ArticlesQueryParam) ([]entity.Article, error) {
 				Id:        r.Id,
 				Title:     r.Title,
 				Subtitle:  r.Subtitle,
+				Thumbnail: r.Thumbnail,
 				CreatedAt: r.CreatedAt})
 			lastArticle = &articles[len(articles)-1]
 		}
@@ -175,6 +176,7 @@ func (p Pg) Article(id int) (entity.Article, error) {
 		Title:     rows[0].Title,
 		Subtitle:  rows[0].Subtitle,
 		Content:   rows[0].Content,
+		Thumbnail: rows[0].Thumbnail,
 		CreatedAt: rows[0].CreatedAt}
 	insertedTags := map[int]struct{}{}
 	for _, r := range rows {
