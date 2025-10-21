@@ -27,9 +27,9 @@ templ ArticleList(article []entity.Article) {
                                 if diff := time.Now().Sub(a.CreatedAt); diff < time.Hour*24*14 {
                                     <p> {fmt.Sprintf("%.0f", diff.Hours() / 24)} days ago </p>
                                 } else if diff < time.Hour*24*365{
-                                    <p> {a.CreatedAt.Format("01 02")} </p>
+                                    <p> {a.CreatedAt.Format("Jan 02")} </p>
                                 } else {
-                                    <p> {a.CreatedAt.Format("01 02, 2006")}</p>
+                                    <p> {a.CreatedAt.Format("Jan 02, 2006")}</p>
                                 }
                             </div>
 
