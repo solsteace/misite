@@ -12,27 +12,28 @@ templ Base(alpinejsUrl, htmxUrl string) {
             hx-replace-url="true"
         >
             <nav
+                class="main-nav"
                 hx-target="#target"
                 hx-swap="innerHTML"
             >
                 <ul>
                     <li>
-                        <button
+                        <a
                             hx-trigger="click"
                             hx-get="/home"
-                        > Home </button>
+                        > Home </a>
                     </li>
                     <li>
-                        <button
+                        <a
                             hx-trigger="click"
                             hx-get="/projects"
-                        > Projects </button>
+                        > Projects </a>
                     </li>
                     <li>
-                        <button
+                        <a
                             hx-trigger="click"
                             hx-get="/articles"
-                        > Articles </button>
+                        > Articles </a>
                     </li>
                 </ul>
             </nav>

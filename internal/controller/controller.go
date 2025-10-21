@@ -2,7 +2,6 @@ package controller
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -207,7 +206,6 @@ func (c Controller) Project(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	fmt.Printf("%+v", project)
 	pageComponent := page.Project(project)
 	if c.requestNeedsBase(r) {
 		return c.serveWithBase(pageComponent, w, r)

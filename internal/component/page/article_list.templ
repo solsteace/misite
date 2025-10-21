@@ -2,31 +2,76 @@ package page
 
 import "github.com/solsteace/misite/internal/entity"
 import "fmt"
+import "time"
 
 templ ArticleList(article []entity.Article) {
-    <div
-        hx-target="#target"
-        hx-swap="innerHTML"
-    > 
-        for _, a := range article {
-            <div 
-                style="border: 1px solid black;"
-                hx-trigger="click"
-                hx-get={fmt.Sprintf("/article/%d", a.Id)}
-            >
-                if a.Serie != nil {
-                    <p style="color:grey"> (Published in {a.Serie.Name}) </p>
+    <div class="explore-layout">
+        <div class="explore-layout-left">
+            TAGS HERE
+        </div>
+
+        <div
+            hx-target="#target"
+            hx-swap="innerHTML"
+            class="explore-layout-right"
+        > 
+            for idx, a := range article {
+                <div 
+                    class="explore-layout-right__list-entry el-list-entry"
+                    hx-trigger="click"
+                    hx-get={fmt.Sprintf("/article/%d", a.Id)}
+                >
+                    <div class="el-list-entry__data article-entry">
+                        <div class="article-entry__serie-and-timestamp">
+                            <div>
+                                if diff := time.Now().Sub(a.CreatedAt); diff < time.Hour*24*14 {
+                                    <p> {fmt.Sprintf("%.0f", diff.Hours() / 24)} days ago </p>
+                                } else if diff < time.Hour*24*365{
+                                    <p> {a.CreatedAt.Format("01 02")} </p>
+                                } else {
+                                    <p> {a.CreatedAt.Format("01 02, 2006")}</p>
+                                }
+                            </div>
+
+                            if a.Serie != nil {
+                                <div class="article-entry__serie">
+                                    <p> · In </p>
+                                    <p class="article-entry__serie-link" >
+                                        {a.Serie.Name} 
+                                    </p> 
+                                </div>
+                            }
+                        </div>
+
+                        <div class="article-entry__title-subtitle">
+                            <p class="article-entry__title"> {a.Title} </p>
+                            <p class="article-entry__subtitle"> 
+                                if truncIdx := 140; len(a.Subtitle) > truncIdx {
+                                    {a.Subtitle[:truncIdx]}...
+                                }  else {
+                                    {a.Subtitle}
+                                }
+                            </p>
+                        </div>
+
+                        if len(a.Tag) > 0 {
+                            <div class="badges">
+                                for _, t := range a.Tag {
+                                    <div class="badge-item"> {t.Name} </div>
+                                }
+                            </div>
+                        }
+
+                    </div>
+                    <div class="el-list-entry__thumbnail">
+                        <img src={a.Thumbnail}>
+                    </div>
+                </div>
+
+                if idx < len(article) - 1 {
+                    <div class="el-list-entry__delimiter"> </div>
                 }
-
-                <b> {a.Title} </b>
-                <p> {a.Subtitle} </p>
-
-                for _, t := range a.Tag {
-                    <div> {t.Name} </div>
-                }
-
-                <p> Published at: {a.CreatedAt.UTC().String()}</p>
-            </div>
-        }
+            }
+        </div>
     </div>
 }

@@ -4,25 +4,50 @@ import "github.com/solsteace/misite/internal/entity"
 import "fmt"
 
 templ ProjectList(project []entity.Project) {
-    <div
-        hx-target="#target"
-        hx-swap="innerHTML"
-    > 
-        for _, p := range project {
-            <div 
-                style="border: 1px solid black;"
-                hx-trigger="click"
-                hx-get={fmt.Sprintf("/project/%d", p.Id)}
-            >
-                <img src={p.Thumbnail}>
-                <b> {p.Name} </b>
-                <p> {p.Synopsis} </p>
-                <div>
-                    for _, t := range p.Tag {
-                        <div> {t.Name} </div>
-                    }
+    <div class="explore-layout" >
+        <div class="explore-layout-left">
+            TAGS HERE
+        </div>
+
+        <div
+            hx-target="#target"
+            hx-swap="innerHTML"
+            class="explore-layout-right"
+        > 
+            for idx, p := range project {
+                <div 
+                    class="explore-layout-right__list-entry el-list-entry"
+                    hx-trigger="click"
+                    hx-get={fmt.Sprintf("/project/%d", p.Id)}
+                >
+                    <div class="el-list-entry__data project-entry">
+                        <p class="project-entry__title"> {p.Name} </p>
+                        <p> 
+                            if truncIdx := 220; len(p.Synopsis) > truncIdx {
+                                {p.Synopsis[:truncIdx]}...
+                            }  else {
+                                {p.Synopsis}
+                            }
+                        </p>
+
+                        if len(p.Tag) > 0 {
+                            <div class="badges">
+                                for _, t := range p.Tag {
+                                    <div class="badge-item"> {t.Name} </div>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    <div class="el-list-entry__thumbnail">
+                        <img src={p.Thumbnail}>
+                    </div>
                 </div>
-            </div>
-        }
+
+                if idx < len(project) - 1 {
+                    <div class="el-list-entry__delimiter"> </div>
+                }
+            }
+        </div>
     </div>
 }
