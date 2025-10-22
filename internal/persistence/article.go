@@ -136,8 +136,11 @@ type pgArticle struct {
 	Thumbnail string    `db:"thumbnail"`
 	CreatedAt time.Time `db:"created_at"`
 
-	Serie sql.Null[int] `db:"serie.id"`
-	Tag   struct {
+	Serie struct {
+		Id   sql.Null[int]    `db:"id"`
+		Name sql.Null[string] `db:"name"`
+	}
+	Tag struct {
 		Id   sql.Null[int]    `db:"id"`
 		Name sql.Null[string] `db:"name"`
 	}
@@ -154,7 +157,8 @@ func (p Pg) Article(id int) (entity.Article, error) {
 			articles.created_at AS "created_at",
 			tags.id AS "tag.id",
 			tags.name AS "tag.name",
-			series.id AS "serie.id"
+			series.id AS "serie.id",
+			series.name AS "serie.name"
 		FROM articles
 		LEFT JOIN article_series ON articles.id = article_series.article_id
 		LEFT JOIN series ON article_series.serie_id = series.id
@@ -181,9 +185,10 @@ func (p Pg) Article(id int) (entity.Article, error) {
 		CreatedAt: rows[0].CreatedAt}
 	insertedTags := map[int]struct{}{}
 	for _, r := range rows {
-		if r.Serie.Valid {
+		if r.Serie.Id.Valid {
 			article.Serie = &entity.Serie{
-				Id: r.Serie.V}
+				Id:   r.Serie.Id.V,
+				Name: r.Serie.Name.V}
 		}
 		if r.Tag.Id.Valid {
 			if _, ok := insertedTags[r.Tag.Id.V]; !ok {

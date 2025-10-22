@@ -1,23 +1,81 @@
 package page
 
 import "github.com/solsteace/misite/internal/entity"
+import "fmt"
+import "time"
+
+
+func newArticleHTMLIdentifier() string {
+    return "main-article"
+}
+
+func makeOutlineExpr(articleElemId, targetElem string) string {
+    return fmt.Sprintf("MakeOutline('%s', '%s')", articleElemId, targetElem)
+}
+
+templ onArticle() {
+    @templ.JSUnsafeFuncCall(` window.scroll({ top: 0, left: 0, behavior: "smooth" })`)
+    @templ.JSUnsafeFuncCall(makeOutlineExpr(
+        newArticleHTMLIdentifier(), 
+        fmt.Sprintf("outline-%s", newArticleHTMLIdentifier())))
+}
 
 templ Article(article entity.Article) {
-    <div> 
-        <article>
-            <img src={article.Thumbnail}/>
+    <div class="specification-layout"> 
+        <section class="specification-layout-top">
+            <section class="article-header">
+                <div class="article-header__serie-and-timestamp util--dim">
+                    if diff := time.Now().Sub(article.CreatedAt); diff < time.Hour*24*14 {
+                        <p> {fmt.Sprintf("%.0f", diff.Hours() / 24)} days ago </p>
+                    } else if diff < time.Hour*24*365{
+                        <p> {article.CreatedAt.Format("Jan 02")} </p>
+                    } else {
+                        <p> {article.CreatedAt.Format("Jan 02, 2006")}</p>
+                    }
 
-            <h1> {article.Title} </h1>
-            <p> {article.Subtitle} </p>
-            <div style="display: flex; gap: 5px;">
-                <b> Tags </b>
-                for _, tag := range article.Tag {
-                    <div> {tag.Name} </div>
+                    if article.Serie != nil {
+                        <div class="article-entry__serie">
+                            <p> · In </p>
+                            <p class="article-entry__serie-link" >
+                                {article.Serie.Name} 
+                            </p> 
+                        </div>
+                    }
+                </div>
+                <h1> {article.Title} </h1>
+                <p> {article.Subtitle} </p>
+                <div class="badges">
+                    for _, tag := range article.Tag {
+                        <div class="badge-item"> {tag.Name} </div>
+                    }
+                </div>
+            </section>
+
+            <section class="specification-layout-top__thumbnail">
+                <img src={article.Thumbnail}/>
+            </section>
+        </section>
+        <div class="specification-layout-bottom">
+            <nav 
+                class="specification-layout-bottom--left article-navigation"
+                id={fmt.Sprintf("outline-%s", newArticleHTMLIdentifier())}
+            > 
+                <b class="article-navigation__header"> Outline </b>
+            </nav>
+
+            <article 
+                class="specification-layout-bottom--right article-content"
+                id={newArticleHTMLIdentifier()}
+            >
+                @templ.Raw(article.Content)
+
+                // temporary placeholder
+                for i := 1;  i < 100; i++ {
+                    <p> hsldaldajld </p>
                 }
-            </div>
+            </article>
 
-            @templ.Raw(article.Content)
-        </article>
-
+            @onArticle()
+        </div>
     </div>
 }

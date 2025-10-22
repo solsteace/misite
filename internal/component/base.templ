@@ -4,6 +4,7 @@ templ Base(alpinejsUrl, htmxUrl string) {
     <html>
         <head>
             <link rel="stylesheet" href="/static/style.css" />
+            <script src="/static/script.js"></script>
             <script defer src={alpinejsUrl}></script>
             <script src={htmxUrl}></script>
         </head>
@@ -38,7 +39,7 @@ templ Base(alpinejsUrl, htmxUrl string) {
                 </ul>
             </nav>
 
-            <div id="target"> 
+            <div id="target" class="site-content"> 
                 {children...}
             </div>
         </body>

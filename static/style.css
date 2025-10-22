@@ -1,18 +1,60 @@
+/***************************************
+VARS + UTILITIES 
+***************************************/
+body {
+    --gap-tiny: 4px;
+    --gap-small: 8px;
+    --gap-medium: 16px;
+    --gap-large: 28px;
+}
+
+.util--dim {
+    filter: opacity(75%);
+}
+
+
+/***************************************
+BASIC ELEM OVERRIDE
+***************************************/
 * {
     margin: 0px;
     padding: 0px;
-    font-size: 0.95rem;
+    font-size: 1rem;
     font-family: system-ui;
+    box-sizing: border-box;
+    scroll-behavior: smooth;
 }
 
 body {
-    padding: 0px clamp(20px, 30%, 100px);
+    padding: 0px clamp(20px, 30%, 140px);
 }
+
+h1 {
+    font-size: 2rem;
+}
+
+h2 {
+    font-size: 1.6rem;
+}
+
+h3 {
+    font-size: 1.3rem;
+}
+
+h4, h5, h6 {
+    font-size: 1rem;
+}
+
+
 /***************************************
-MAIN NAV
+SITE
 ***************************************/
+.site-content {
+    padding: 28px 0;
+}
+
 .main-nav {
-    justify-content: center;
+    justify-content: left;
     display: flex;
 }
 
@@ -37,17 +79,20 @@ BADGE
 ***************************************/
 .badges {
     display: flex;
-    gap: 4px;
+    gap: var(--gap-tiny);
 }
 
 .badge-item {
-    font-size: 0.8rem;
-    padding: 4px 8px;
+    font-size: 0.75rem;
+    padding: 2px 4px;
     border: 1px solid black;
     background: inherit;
+    transition: border-radius 0.25s;
 }
 
 .badge-item:hover {
+    border-radius: 6px;
+    transition: border-radius 0.25s;
     cursor: pointer;
     filter: brightness(130%);
 }
@@ -57,7 +102,7 @@ A layout inspired from Medium/Substack explore page
 ***************************************/
 .explore-layout {
     display: flex;
-    gap: 12px
+    gap: var(--gap-medium)
 }
 
 .explore-layout-left {
@@ -69,13 +114,13 @@ A layout inspired from Medium/Substack explore page
 
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--gap-small);
 }
 
 .explore-layout-right__list-entry {
     padding: 8px 0px;
     display: flex;
-    gap: 24px;
+    gap: var(--gap-large);
     align-items:center;
 }
 
@@ -100,8 +145,126 @@ A layout inspired from Medium/Substack explore page
 }
 
 /***************************************
+Layout for viewing certain item
+***************************************/
+.specification-layout {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-large);
+}
+
+.specification-layout-top {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-medium);
+}
+
+.specification-layout-top__thumbnail {
+    flex: 1;
+    max-height: 360px;
+}
+
+.specification-layout-top__thumbnail > img {
+    width: 100%;
+    max-height: inherit;
+}
+
+.specification-layout-bottom {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: stretch;
+    gap: var(--gap-medium);
+}
+
+.specification-layout-bottom--left {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-medium);
+    flex: 1;
+}
+
+.specification-layout-bottom--left:focus {
+    background: red;
+}
+
+.specification-layout-bottom--right {
+    position: relative;
+    flex: 4;
+}
+
+/***************************************
 ETC
 ***************************************/
+.project-navigation-wrapper {
+    flex: 1;
+}
+
+.project-navigation,
+.article-navigation {
+    height: fit-content;
+    top: 16px;
+    position: sticky;
+}
+
+.project-links,
+.project-navigation,
+.article-navigation {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-tiny);
+}
+.project-navigation__header,
+.project-links__header,
+.article-navigation__header {
+    font-size: 1.2rem;
+}
+
+.project-links > a,
+.project-navigation > a,
+.article-navigation > a {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+}
+.project-links > a:hover,
+.project-navigation > a:hover,
+.article-navigation > a:hover {
+    text-decoration: underline;
+}
+
+.project-header,
+.article-header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-tiny);
+}
+.article-header__serie-and-timestamp {
+    display: flex;
+    gap: var(--gap-tiny);
+}
+
+.article-content {
+    display: flex;
+    gap: var(--gap-large);
+}
+
+.project-content,
+.project-content *,
+.article-content,
+.article-content * {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-medium);
+}
+
+
+
+
+
+
+
+
+
 .project-entry,
 .article-entry {
     cursor: pointer;

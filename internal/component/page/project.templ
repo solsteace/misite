@@ -1,35 +1,75 @@
 package page
 
 import "github.com/solsteace/misite/internal/entity"
+import "fmt"
+
+func newProjectHTMLIdentifier() string {
+    return "main-project"
+}
+
+templ onProject() {
+    @templ.JSUnsafeFuncCall(` window.scroll({ top: 0, left: 0, behavior: "smooth" })`)
+    @templ.JSUnsafeFuncCall(makeOutlineExpr(
+        newProjectHTMLIdentifier(), 
+        fmt.Sprintf("outline-%s", newProjectHTMLIdentifier())))
+}
 
 templ Project(project entity.Project) {
-    <div>
-        <div>
-            <img src={project.Thumbnail} />
-        </div>
-        <div>
-            <div>
+    <div class="specification-layout">
+        <div class="specification-layout-top">
+            <section class="project-header">
                 <h1> {project.Name} </h1>
                 <p> {project.Synopsis} </p>
-                <div> {project.Description} </div>
-            </div>
+                <div class="badges">
+                    for _, tag := range project.Tag {
+                        <div class="badge-item"> {tag.Name} </div>
+                    }
+                </div>
+            </section>
+
+            <section class="specification-layout-top__thumbnail">
+                <img src={project.Thumbnail}/>
+            </section>
         </div>
-        <div>
-            if len(project.Tag) > 0 {
-                for _, t := range project.Tag {
-                    <div> {t.Name} </div>
-                }
-            }
 
-            if project.Serie != nil {
-                <a href="/"> Featured Serie </a> // TODO: link serie here
-            }
+        <div class="specification-layout-bottom">
+            <div class="specification-layout-bottom--left" > 
+                <section class="project-links">
+                    <b class="project-links__header"> Links </b>
+                    if project.Serie != nil {
+                        <a href="/"> Featured Serie </a> // TODO: link serie here
+                    }
 
-            if len(project.Link) > 0 {
-                for _, l := range project.Link {
-                    <a href={l.Url}> {l.DisplayText} </a>
+                    if len(project.Link) > 0 {
+                        for _, l := range project.Link {
+                            <a href={l.Url}> {l.DisplayText} </a>
+                        }
+                    }
+                </section>
+
+                <div class="project-navigation-wrapper">
+                    <nav 
+                        class="project-navigation"
+                        id={fmt.Sprintf("outline-%s", newProjectHTMLIdentifier())}
+                    > 
+                        <b class="project-navigation__header"> Outline </b>
+                    </nav>
+                </div>
+            </div>
+
+            <article 
+                class="specification-layout-bottom--right project-content" 
+                id={newProjectHTMLIdentifier()}
+            >
+                @templ.Raw(project.Description)
+
+                // temporary placeholder
+                for i := 1;  i < 100; i++ {
+                    <p> hsldaldajld </p>
                 }
-            }
+            </article>
+
+            @onProject()
         </div>
     </div>
 }
