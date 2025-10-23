@@ -17,7 +17,7 @@ func mapIntToString(ints []int, prefix string) []string {
 templ ProjectList(project []entity.Project, topTags []int) {
     <div class="explore-layout" >
         <div 
-            class="explore-layout-left"
+            class="explore-layout__left"
             hx-get={fmt.Sprintf(
                 "/tags?by=project&%s", 
                 strings.Join(mapIntToString(topTags, "tagId="), "&"))}
@@ -34,16 +34,16 @@ templ ProjectList(project []entity.Project, topTags []int) {
         <div
             hx-target="#target"
             hx-swap="innerHTML"
-            class="explore-layout-right"
+            class="explore-layout__right"
         > 
             for idx, p := range project {
                 <div 
-                    class="explore-layout-right__list-entry el-list-entry"
+                    class="list-entry-component"
                     hx-trigger="click"
                     hx-get={fmt.Sprintf("/project/%d", p.Id)}
                 >
-                    <div class="el-list-entry__data project-entry">
-                        <p class="project-entry__title"> {p.Name} </p>
+                    <div class="list-entry-component__data projects-entry">
+                        <p class="projects-entry__title"> {p.Name} </p>
                         <p> 
                             if truncIdx := 220; len(p.Synopsis) > truncIdx {
                                 {p.Synopsis[:truncIdx]}...
@@ -61,13 +61,13 @@ templ ProjectList(project []entity.Project, topTags []int) {
                         }
                     </div>
 
-                    <div class="el-list-entry__thumbnail">
+                    <div class="list-entry-component__thumbnail">
                         <img src={p.Thumbnail}>
                     </div>
                 </div>
 
                 if idx < len(project) - 1 {
-                    <div class="el-list-entry__delimiter"> </div>
+                    <div class="list-entry-component__delimiter"> </div>
                 }
             }
         </div>

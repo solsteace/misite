@@ -34,15 +34,15 @@ h1 {
 }
 
 h2 {
-    font-size: 1.6rem;
+    font-size: 1.75rem;
 }
 
 h3 {
-    font-size: 1.3rem;
+    font-size: 1.5rem;
 }
 
 h4, h5, h6 {
-    font-size: 1rem;
+    font-size: 1.125rem;
 }
 
 
@@ -53,22 +53,22 @@ SITE
     padding: 28px 0;
 }
 
-.main-nav {
+.site-nav {
     justify-content: left;
     display: flex;
 }
 
-.main-nav > ul {
+.site-nav > ul {
     display: flex;
     gap: 8px;
     list-style-type: none;
 }
 
-.main-nav > ul > li {
+.site-nav > ul > li {
     padding: 8px;
 }
 
-.main-nav > ul > li > a:hover {
+.site-nav > ul > li > a:hover {
     font-weight: bold;
     text-decoration: underline;
     cursor:pointer;
@@ -106,11 +106,11 @@ A layout inspired from Medium/Substack explore page
     gap: var(--gap-medium)
 }
 
-.explore-layout-left {
+.explore-layout__left {
     flex: 1;
 }
 
-.explore-layout-right {
+.explore-layout__right {
     flex: 4;
 
     display: flex;
@@ -118,29 +118,29 @@ A layout inspired from Medium/Substack explore page
     gap: var(--gap-small);
 }
 
-.explore-layout-right__list-entry {
+.list-entry-component {
     padding: 8px 0px;
     display: flex;
     gap: var(--gap-large);
     align-items:center;
 }
 
-.el-list-entry__thumbnail { 
+.list-entry-component__thumbnail { 
     flex: 1;
     height: 120px;
     aspect-ratio: 4 / 3;
 }
 
-.el-list-entry__thumbnail > img {
+.list-entry-component__thumbnail > img {
     width: 100%;
     height: 100%;
 }
 
-.el-list-entry__data {
+.list-entry-component__data {
     flex: 3;
 }
 
-.el-list-entry__delimiter {
+.list-entry-component__delimiter {
     margin: 4px 0px;
     border-bottom: 1px solid black;
 }
@@ -261,40 +261,33 @@ ETC
     gap: var(--gap-medium);
 }
 
-
-
-
-
-
-
-
-
-.project-entry,
-.article-entry {
+.projects-entry,
+.articles-entry {
     cursor: pointer;
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
 
-.article-entry__serie-and-timestamp {
-    opacity: 80%;
+.article-entry__serie-and-timestamp,
+.articles-entry__serie-and-timestamp {
     display: flex;
     gap: 4px;
 }
 
-.article-entry__serie {
+.article-entry__serie,
+.articles-entry__serie {
     display: flex;
     gap: 1ch;
 }
 
-.article-entry__serie-link:hover {
+.articles-entry__serie-link:hover {
     text-decoration: underline;
     cursor: pointer;
 }
 
-.project-entry__title,
-.article-entry__title {
+.projects-entry__title,
+.articles-entry__title {
     font-size: 1.25rem;
     font-weight: bold;
 }
