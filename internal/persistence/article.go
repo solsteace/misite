@@ -201,3 +201,43 @@ func (p Pg) Article(id int) (entity.Article, error) {
 	}
 	return article, nil
 }
+
+func (p Pg) CountArticleMatchingTags(tagId []int) ([]entity.Tag, []int, error) {
+	query := `
+		WITH 
+			tag_count_by_article AS (
+				SELECT
+					tag_id AS "id",
+					COUNT(article_id) AS "count"
+				FROM article_tags
+				WHERE article_tags.tag_id = ANY($1::int[])
+				GROUP BY tag_id)
+		SELECT 
+			tag_count.id,
+			tag_count."count",
+			tags.name AS "name"
+		FROM tag_count_by_article AS tag_count
+		JOIN tags ON tag_count.id = tags.id
+		ORDER BY tag_count.count DESC`
+
+	var rows []struct {
+		Id      int    `db:"id"`
+		Count   int    `db:"count"`
+		TagName string `db:"name"`
+	}
+	args := []any{tagId}
+	if err := p.db.Select(&rows, query, args...); err != nil {
+		return []entity.Tag{}, []int{}, fmt.Errorf(
+			"persistence<Pg.CountArticleMatchingTags>: %w", err)
+	}
+
+	var tags []entity.Tag
+	var count []int
+	for _, r := range rows {
+		tags = append(tags, entity.Tag{
+			Id:   r.Id,
+			Name: r.TagName})
+		count = append(count, r.Count)
+	}
+	return tags, count, nil
+}

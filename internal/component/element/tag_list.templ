@@ -1,0 +1,34 @@
+package element
+
+import "github.com/solsteace/misite/internal/entity"
+import "fmt"
+
+func tagRedirectURLFromType(tagType string) string {
+    switch(tagType) {
+        case "project", "projects":
+            return "/projects?tagId=%d"
+        case "article", "articles":
+            return "/articles?tagId=%d"
+    }
+    return ""
+}
+
+templ Tags(tags []entity.Tag, count []int, tagType string) {
+    <ul
+        hx-replace-url="true"
+        hx-push-url="true"
+        hx-target="#target"
+        hx-swap="innerHTML"
+    >
+        for idx, t := range tags {
+            <li> 
+                <a 
+                    hx-trigger="click"
+                    hx-get={fmt.Sprintf(tagRedirectURLFromType(tagType), t.Id)}
+                > 
+                    {t.Name} 
+                </a> {count[idx]}
+            </li>
+        }
+    </ul>
+}

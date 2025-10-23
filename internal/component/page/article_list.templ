@@ -3,11 +3,23 @@ package page
 import "github.com/solsteace/misite/internal/entity"
 import "fmt"
 import "time"
+import "strings"
 
-templ ArticleList(article []entity.Article) {
+templ ArticleList(article []entity.Article, topTags []int) {
     <div class="explore-layout">
-        <div class="explore-layout-left">
-            TAGS HERE
+        <div 
+            class="explore-layout-left"
+            hx-get={fmt.Sprintf(
+                "/tags?by=article&%s", 
+                strings.Join(mapIntToString(topTags, "tagId="), "&"))}
+            hx-trigger="load"
+            hx-replace-url="false"
+            hx-push-url="false"
+            hx-target="#tags-in-projects"
+            hx-swap="innerHTML"
+        > 
+            <b class="articles__tags-header"> Tags </b>
+            <nav id="tags-in-projects" class="articles__tags"> <p> Loading... </p> </nav>
         </div>
 
         <div

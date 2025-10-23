@@ -102,6 +102,7 @@ A layout inspired from Medium/Substack explore page
 ***************************************/
 .explore-layout {
     display: flex;
+    flex-direction: row-reverse;
     gap: var(--gap-medium)
 }
 
@@ -213,6 +214,9 @@ ETC
     flex-direction: column;
     gap: var(--gap-tiny);
 }
+
+.articles__tags-header,
+.projects__tags-header,
 .project-navigation__header,
 .project-links__header,
 .article-navigation__header {
@@ -293,4 +297,12 @@ ETC
 .article-entry__title {
     font-size: 1.25rem;
     font-weight: bold;
+}
+
+.articles__tags > ul,
+.projects__tags > ul {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-tiny);
+    list-style-type: none;
 }

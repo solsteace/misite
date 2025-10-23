@@ -2,11 +2,33 @@ package page
 
 import "github.com/solsteace/misite/internal/entity"
 import "fmt"
+import "strconv"
+import "strings"
 
-templ ProjectList(project []entity.Project) {
+func mapIntToString(ints []int, prefix string) []string {
+    var sInts []string
+    for _, i := range ints {
+        sInt := fmt.Sprintf("%s%s", prefix, strconv.Itoa(i))
+        sInts = append(sInts, sInt)
+    }
+    return sInts
+}
+
+templ ProjectList(project []entity.Project, topTags []int) {
     <div class="explore-layout" >
-        <div class="explore-layout-left">
-            TAGS HERE
+        <div 
+            class="explore-layout-left"
+            hx-get={fmt.Sprintf(
+                "/tags?by=project&%s", 
+                strings.Join(mapIntToString(topTags, "tagId="), "&"))}
+            hx-trigger="load"
+            hx-replace-url="false"
+            hx-push-url="false"
+            hx-target="#tags-in-projects"
+            hx-swap="innerHTML"
+        > 
+            <b class="projects__tags-header"> Tags </b>
+            <nav id="tags-in-projects" class="projects__tags"> <p> Loading... </p> </nav>
         </div>
 
         <div

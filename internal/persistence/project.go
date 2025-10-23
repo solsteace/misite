@@ -194,3 +194,43 @@ func (p Pg) Project(id int) (entity.Project, error) {
 	}
 	return project, nil
 }
+
+func (p Pg) CountProjectMatchingTags(tagId []int) ([]entity.Tag, []int, error) {
+	query := `
+		WITH 
+			tag_count_by_project AS (
+				SELECT
+					tag_id AS "id",
+					COUNT(project_id) AS "count"
+				FROM project_tags
+				WHERE project_tags.tag_id = ANY($1::int[])
+				GROUP BY tag_id)
+		SELECT 
+			tag_count.id,
+			tag_count."count",
+			tags.name AS "name"
+		FROM tag_count_by_project AS tag_count
+		JOIN tags ON tag_count.id = tags.id
+		ORDER BY tag_count.count DESC`
+
+	var rows []struct {
+		Id      int    `db:"id"`
+		Count   int    `db:"count"`
+		TagName string `db:"name"`
+	}
+	args := []any{tagId}
+	if err := p.db.Select(&rows, query, args...); err != nil {
+		return []entity.Tag{}, []int{}, fmt.Errorf(
+			"persistence<Pg.CountProjectMatchingTags>: %w", err)
+	}
+
+	var tags []entity.Tag
+	var count []int
+	for _, r := range rows {
+		tags = append(tags, entity.Tag{
+			Id:   r.Id,
+			Name: r.TagName})
+		count = append(count, r.Count)
+	}
+	return tags, count, nil
+}
