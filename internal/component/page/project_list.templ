@@ -4,6 +4,7 @@ import "github.com/solsteace/misite/internal/entity"
 import "fmt"
 import "strconv"
 import "strings"
+import "github.com/solsteace/misite/internal/component/utility"
 
 func mapIntToString(ints []int, prefix string) []string {
     var sInts []string
@@ -35,7 +36,7 @@ templ ProjectList(project []entity.Project, topTags []int) {
         </div>
 
         <div
-            hx-target="#target"
+            hx-target="#page"
             hx-swap="innerHTML"
             class="explore-layout__right"
         > 
@@ -56,11 +57,23 @@ templ ProjectList(project []entity.Project, topTags []int) {
                         </p>
 
                         if len(p.Tag) > 0 {
-                            <div class="badges">
-                                for _, t := range p.Tag {
-                                    <div class="badge-item"> {t.Name} </div>
-                                }
-                            </div>
+                            <section>
+                                <ul class="badges">
+                                    for _, t := range p.Tag {
+                                        <li class="badge-item"> 
+                                            <a
+                                                class="badge-item__link"
+                                                hx-trigger="click consume"
+                                                hx-target="#page"
+                                                hx-get={fmt.Sprintf("%s?tagId=%d", utility.ExploreProjectUrl, t.Id)}
+                                                href= {fmt.Sprintf("%s?tagId=%d", utility.ExploreProjectUrl, t.Id)} 
+                                            >
+                                                {t.Name}
+                                            </a> 
+                                        </li>
+                                    }
+                                </ul>
+                            </section>
                         }
                     </div>
 

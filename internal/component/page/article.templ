@@ -3,6 +3,7 @@ package page
 import "github.com/solsteace/misite/internal/entity"
 import "fmt"
 import "time"
+import "github.com/solsteace/misite/internal/component/utility"
 
 
 func newArticleHTMLIdentifier() string {
@@ -44,11 +45,23 @@ templ Article(article entity.Article) {
                 </div>
                 <h1> {article.Title} </h1>
                 <p> {article.Subtitle} </p>
-                <div class="badges">
-                    for _, tag := range article.Tag {
-                        <div class="badge-item"> {tag.Name} </div>
-                    }
-                </div>
+                <section>
+                    <ul class="badges">
+                        for _, t := range article.Tag {
+                            <li class="badge-item"> 
+                                <a
+                                    class="badge-item__link"
+                                    hx-trigger="click consume"
+                                    hx-target="#page"
+                                    hx-get={fmt.Sprintf("%s?tagId=%d", utility.ExploreArticleUrl, t.Id)}
+                                    href= {fmt.Sprintf("%s?tagId=%d", utility.ExploreArticleUrl, t.Id)} 
+                                >
+                                    {t.Name}
+                                </a> 
+                            </li>
+                        }
+                    </ul>
+                </section>
             </section>
 
             <section class="specification-layout-top__thumbnail">

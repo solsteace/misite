@@ -2,6 +2,7 @@ package page
 
 import "github.com/solsteace/misite/internal/entity"
 import "fmt"
+import "github.com/solsteace/misite/internal/component/utility"
 
 func newProjectHTMLIdentifier() string {
     return "main-project"
@@ -20,11 +21,23 @@ templ Project(project entity.Project) {
             <section class="project-header">
                 <h1> {project.Name} </h1>
                 <p> {project.Synopsis} </p>
-                <div class="badges">
-                    for _, tag := range project.Tag {
-                        <div class="badge-item"> {tag.Name} </div>
-                    }
-                </div>
+                <section>
+                    <ul class="badges">
+                        for _, t := range project.Tag {
+                            <li class="badge-item"> 
+                                <a
+                                    class="badge-item__link"
+                                    hx-trigger="click consume"
+                                    hx-target="#page"
+                                    hx-get={fmt.Sprintf("%s?tagId=%d", utility.ExploreProjectUrl, t.Id)}
+                                    href= {fmt.Sprintf("%s?tagId=%d", utility.ExploreProjectUrl, t.Id)} 
+                                >
+                                    {t.Name}
+                                </a> 
+                            </li>
+                        }
+                    </ul>
+                </section>
             </section>
 
             <section class="specification-layout-top__thumbnail">

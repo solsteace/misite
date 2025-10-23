@@ -9,8 +9,8 @@ import (
 	"github.com/a-h/templ"
 	"github.com/go-chi/chi/v5"
 	"github.com/solsteace/misite/internal/component"
-	"github.com/solsteace/misite/internal/component/element"
 	"github.com/solsteace/misite/internal/component/page"
+	"github.com/solsteace/misite/internal/component/widget"
 	"github.com/solsteace/misite/internal/persistence"
 	"github.com/solsteace/misite/internal/service"
 )
@@ -240,13 +240,13 @@ func (c Controller) Tags(w http.ResponseWriter, r *http.Request) error {
 		if err != nil {
 			return fmt.Errorf("controller<Controller.Tags>: %w", err)
 		}
-		pageComponent = element.Tags(tags, count, "articles")
+		pageComponent = widget.Tags(tags, count, "articles")
 	case "project":
 		tags, count, err := c.service.CountProjectMatchingTags(tagIds)
 		if err != nil {
 			return fmt.Errorf("controller<Controller.Tags>: %w", err)
 		}
-		pageComponent = element.Tags(tags, count, "projects")
+		pageComponent = widget.Tags(tags, count, "projects")
 	default:
 		pageComponent = page.NotFound()
 	}

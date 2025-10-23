@@ -4,6 +4,7 @@ import "github.com/solsteace/misite/internal/entity"
 import "fmt"
 import "time"
 import "strings"
+import "github.com/solsteace/misite/internal/component/utility"
 
 templ ArticleList(article []entity.Article, topTags []int) {
     <div class="explore-layout">
@@ -26,7 +27,7 @@ templ ArticleList(article []entity.Article, topTags []int) {
         </div>
 
         <div
-            hx-target="#target"
+            hx-target="#page"
             hx-swap="innerHTML"
             class="explore-layout__right"
         > 
@@ -70,11 +71,23 @@ templ ArticleList(article []entity.Article, topTags []int) {
                         </div>
 
                         if len(a.Tag) > 0 {
-                            <div class="badges">
-                                for _, t := range a.Tag {
-                                    <div class="badge-item"> {t.Name} </div>
-                                }
-                            </div>
+                            <section>
+                                <ul class="badges">
+                                    for _, t := range a.Tag {
+                                        <li class="badge-item"> 
+                                            <a
+                                                class="badge-item__link"
+                                                hx-trigger="click consume"
+                                                hx-target="#page"
+                                                hx-get={fmt.Sprintf("%s?tagId=%d", utility.ExploreArticleUrl, t.Id)}
+                                                href= {fmt.Sprintf("%s?tagId=%d", utility.ExploreArticleUrl, t.Id)} 
+                                            >
+                                                {t.Name}
+                                            </a> 
+                                        </li>
+                                    }
+                                </ul>
+                            </section>
                         }
 
                     </div>

@@ -1,0 +1,28 @@
+package widget
+
+import "github.com/solsteace/misite/internal/entity"
+import "github.com/solsteace/misite/internal/component/utility"
+import "fmt"
+
+templ Tags(tags []entity.Tag, count []int, tagType string) {
+    <ul
+        hx-replace-url="true"
+        hx-push-url="true"
+        hx-target="#page"
+        hx-swap="innerHTML"
+    >
+        for idx, t := range tags {
+            <li> 
+                <a 
+                    hx-trigger="click"
+                    if tagType == "article" || tagType == "articles" {
+                        hx-get={fmt.Sprintf("%s?tagId=%d", utility.ExploreArticleUrl, t.Id)}
+                    } else if tagType == "projects" || tagType == "project" {
+                        hx-trigger="click"
+                        hx-get={fmt.Sprintf("%s?tagId=%d", utility.ExploreProjectUrl, t.Id)}
+                    }
+                > {t.Name} </a> - {count[idx]}
+            </li>
+        }
+    </ul>
+}

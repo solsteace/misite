@@ -47,6 +47,9 @@ h4, h5, h6 {
     font-size: 1.125rem;
 }
 
+ul {
+    list-style-type: none;;
+}
 
 /***************************************
 SITE
@@ -84,16 +87,17 @@ BADGE
     gap: var(--gap-tiny);
 }
 
-.badge-item {
+.badge-item__link {
     font-size: 0.75rem;
     padding: 2px 4px;
     border: 1px solid black;
     background: var(--bg-light);
     transition: filter 0.25s;
     filter: none;
+    color: black;
+    text-decoration: none;
 }
-
-.badge-item:hover {
+.badge-item__link:hover {
     border: 1px solid var(--bg-light);
     transition: filter 0.25s;
     cursor: pointer;
