@@ -8,7 +8,7 @@ import "strings"
 templ ArticleList(article []entity.Article, topTags []int) {
     <div class="explore-layout">
         <div 
-            class="explore-layout__left"
+            class="explore-layout__left articles__exploration"
             hx-get={fmt.Sprintf(
                 "/tags?by=article&%s", 
                 strings.Join(mapIntToString(topTags, "tagId="), "&"))}
@@ -18,8 +18,11 @@ templ ArticleList(article []entity.Article, topTags []int) {
             hx-target="#tags-in-projects"
             hx-swap="innerHTML"
         > 
-            <b class="articles__tags-header"> Tags </b>
-            <nav id="tags-in-projects" class="articles__tags"> <p> Loading... </p> </nav>
+            <section> SEARCH FUNCTIONALITY HERE </section>
+            <section>
+                <b class="articles__tags-header"> # </b>
+                <nav id="tags-in-projects" class="articles__tags"> <p> Loading... </p> </nav>
+            </section>
         </div>
 
         <div

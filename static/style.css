@@ -2,6 +2,8 @@
 VARS + UTILITIES 
 ***************************************/
 body {
+    --bg-light: white;
+
     --gap-tiny: 4px;
     --gap-small: 8px;
     --gap-medium: 16px;
@@ -86,15 +88,16 @@ BADGE
     font-size: 0.75rem;
     padding: 2px 4px;
     border: 1px solid black;
-    background: inherit;
-    transition: border-radius 0.25s;
+    background: var(--bg-light);
+    transition: filter 0.25s;
+    filter: none;
 }
 
 .badge-item:hover {
-    border-radius: 6px;
-    transition: border-radius 0.25s;
+    border: 1px solid var(--bg-light);
+    transition: filter 0.25s;
     cursor: pointer;
-    filter: brightness(130%);
+    filter: invert(100%);
 }
 
 /***************************************
@@ -298,4 +301,18 @@ ETC
     flex-direction: column;
     gap: var(--gap-tiny);
     list-style-type: none;
+
+}
+
+.projects__tags > ul > li > a:hover,
+.articles__tags > ul > li > a:hover {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.projects__exploration,
+.articles__exploration {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-medium);
 }
