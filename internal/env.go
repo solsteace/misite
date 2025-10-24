@@ -6,7 +6,8 @@ import (
 )
 
 var (
-	dB_URL string
+	dB_URL    string
+	dB_SCHEMA string
 
 	aLPINE_URL string
 	hTMX_URL   string
@@ -14,6 +15,7 @@ var (
 
 func LoadEnv() {
 	dB_URL = os.Getenv("DB_URL")
+	dB_SCHEMA = os.Getenv("DB_SCHEMA")
 
 	// Use offline scripts instead of fetching it from CDN
 	aLPINE_URL = os.Getenv("ALPINEJS_URL")
