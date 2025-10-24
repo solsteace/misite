@@ -31,6 +31,8 @@ func Run() {
 	// pass its value to `RuntimeParams`
 	dbCfg, err := pgx.ParseConfig(dB_URL)
 	dbCfg.RuntimeParams["search_path"] = dB_SCHEMA
+	fmt.Println(dB_SCHEMA)
+	fmt.Println(dbCfg.RuntimeParams["search_path"])
 	if err != nil {
 		log.Fatalf("db init: %v", err)
 	}
