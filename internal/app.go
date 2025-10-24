@@ -37,9 +37,13 @@ func Run() {
 	dbConn := sqlx.NewDb(stdlib.OpenDB(*dbCfg), "pgx")
 	defer dbConn.Close()
 
-	if _, err := dbConn.Exec(fmt.Sprintf("SET search_path TO %s", dB_SCHEMA)); err != nil {
-		log.Fatalf("schema select: %v", err)
-	}
+	var sp string
+	_ = dbConn.Get(&sp, "SHOW search_path;")
+	fmt.Println("search_path:", sp)
+	fmt.Println(dB_URL)
+	fmt.Println(dB_SCHEMA)
+	fmt.Println(dbCfg.RuntimeParams["search_path"])
+
 	app := chi.NewRouter()
 	store := persistence.NewPg(dbConn)
 	service := service.NewService(&store)
