@@ -19,18 +19,7 @@ import (
 func Run() {
 	LoadEnv()
 
-	// About `search_path` param...
-	// - https://github.com/jackc/pgx/issues/1013
-	// The repo author suggests to pass query `search_path` param. The OP kinda
-	// indicates the solution works on pgx + pgxpool setup.
-	// In pgx + sqlx db connection setup, however, it seems that the solution
-	// doesn't work. Not sure about the actual technical details, tho
-
-	// - https://github.com/riverqueue/river/issues/15
-	// Other folks indicates that the user of this repo could just explicitly
-	// pass its value to `RuntimeParams`
 	dbCfg, err := pgx.ParseConfig(dB_URL)
-	dbCfg.RuntimeParams["search_path"] = dB_SCHEMA
 	if err != nil {
 		log.Fatalf("db init: %v", err)
 	}
