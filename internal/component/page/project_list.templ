@@ -46,7 +46,7 @@ templ ProjectList(project []entity.Project, topTags []int) {
                     hx-get={fmt.Sprintf("/project/%d", p.Id)}
                 >
                     <div class="list-entry-component__data projects-entry">
-                        <p class="projects-entry__title"> {p.Name} </p>
+                        <p class="u__h u__h--4"> {p.Name} </p>
                         <p> 
                             if truncIdx := 220; len(p.Synopsis) > truncIdx {
                                 {p.Synopsis[:truncIdx]}...

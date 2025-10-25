@@ -169,7 +169,6 @@ func (c Controller) Projects(w http.ResponseWriter, r *http.Request) error {
 		}
 		param.Limit = int(nLimit)
 	}
-
 	for _, id := range urlQuery["tagId"] {
 		if id == "" {
 			continue
@@ -251,6 +250,60 @@ func (c Controller) Tags(w http.ResponseWriter, r *http.Request) error {
 		pageComponent = page.NotFound()
 	}
 
+	pageComponent.Render(context.Background(), w)
+	return nil
+}
+
+func (c Controller) SerieList(w http.ResponseWriter, r *http.Request) error {
+	urlQuery := r.URL.Query()
+	param := persistence.SerieListQueryParam{}
+	if sPage := urlQuery.Get("page"); sPage != "" {
+		nPage, err := strconv.ParseInt(sPage, 10, strconv.IntSize)
+		if err != nil {
+			return err
+		} else if nPage < 0 {
+			nPage = 0
+		}
+		param.Page = int(nPage)
+	}
+	if sLimit := urlQuery.Get("limit"); sLimit != "" {
+		nLimit, err := strconv.ParseInt(sLimit, 10, strconv.IntSize)
+		if err != nil {
+			return err
+		} else if nLimit < 0 {
+			nLimit = dEFAULT_PAGE_SIZE
+		}
+		param.Limit = int(nLimit)
+	}
+
+	serieList, err := c.service.SerieList(param)
+	if err != nil {
+		return fmt.Errorf("controller<Controller.SerieList>: %w", err)
+	}
+
+	pageComponent := page.SerieList(serieList)
+	if c.requestNeedsBase(r) {
+		return c.serveWithBase(pageComponent, w, r)
+	}
+	pageComponent.Render(context.Background(), w)
+	return nil
+}
+
+func (c Controller) Serie(w http.ResponseWriter, r *http.Request) error {
+	serieId, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, strconv.IntSize)
+	if err != nil {
+		return err
+	}
+
+	serie, err := c.service.Serie(int(serieId))
+	if err != nil {
+		return fmt.Errorf("controller<Controller.Serie>; %w", err)
+	}
+
+	pageComponent := page.Serie(serie)
+	if c.requestNeedsBase(r) {
+		return c.serveWithBase(pageComponent, w, r)
+	}
 	pageComponent.Render(context.Background(), w)
 	return nil
 }

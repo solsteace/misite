@@ -47,10 +47,20 @@ templ Project(project entity.Project) {
 
         <div class="specification-layout-bottom">
             <div class="specification-layout-bottom--left" > 
-                <section class="project-links">
+                <nav class="project-links">
                     <b class="project-links__header"> Links </b>
                     if project.Serie != nil {
-                        <a href="/"> Featured Serie </a> // TODO: link serie here
+                        <p> Featured in 
+                            <a
+                                class="util--dim"
+                                hx-get={fmt.Sprintf("/serie/%d", project.Serie.Id)}
+                                hx-trigger="click"
+                                hx-target="#page"
+                                hx-push-url="true"
+                                hx-replace-url="true"
+                                hx-swap="innerHTML"
+                            > {project.Serie.Name} </a>
+                        </p>
                     }
 
                     if len(project.Link) > 0 {
@@ -58,16 +68,16 @@ templ Project(project entity.Project) {
                             <a href={l.Url}> {l.DisplayText} </a>
                         }
                     }
-                </section>
+                </nav>
 
-                <div class="project-navigation-wrapper">
+                <nav class="project-navigation-wrapper">
                     <nav 
                         class="project-navigation"
                         id={fmt.Sprintf("outline-%s", newProjectHTMLIdentifier())}
                     > 
                         <b class="project-navigation__header"> Outline </b>
                     </nav>
-                </div>
+                </nav>
             </div>
 
             <article 

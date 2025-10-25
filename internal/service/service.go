@@ -126,3 +126,21 @@ func (s Service) CountProjectMatchingTags(tagIds []int) ([]entity.Tag, []int, er
 	}
 	return tags, count, nil
 }
+
+func (s Service) Serie(id int) (entity.Serie2, error) {
+	serie, err := s.store.Serie(id)
+	if err != nil {
+		return entity.Serie2{}, fmt.Errorf(
+			"service<Service.Serie>: %w", err)
+	}
+	return serie, nil
+}
+
+func (s Service) SerieList(param persistence.SerieListQueryParam) ([]entity.SerieList, error) {
+	serieList, err := s.store.SerieList(param)
+	if err != nil {
+		return []entity.SerieList{}, fmt.Errorf(
+			"service<Service.SerieList>: %w", err)
+	}
+	return serieList, nil
+}

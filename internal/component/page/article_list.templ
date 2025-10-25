@@ -51,15 +51,24 @@ templ ArticleList(article []entity.Article, topTags []int) {
                             if a.Serie != nil {
                                 <div class="articles-entry__serie">
                                     <p> · In </p>
-                                    <p class="articles-entry__serie-link" >
+                                    <a 
+                                        class="articles-entry__serie-link"
+                                        href={fmt.Sprintf("/serie/%d", a.Serie.Id)}
+                                        hx-trigger="click consume"
+                                        hx-get={fmt.Sprintf("/serie/%d", a.Serie.Id)}
+                                        hx-target="#page"
+                                        hx-swap="innerHTML"
+                                        hx-replace-url="true"
+                                        hx-push-url="true"
+                                    >
                                         {a.Serie.Name} 
-                                    </p> 
+                                    </a> 
                                 </div>
                             }
                         </div>
 
                         <div class="articles-entry__title-subtitle">
-                            <p class="articles-entry__title"> {a.Title} </p>
+                            <p class="u__h u__h--4"> {a.Title} </p>
                             <p class="articles-entry__subtitle"> 
                                 if truncIdx := 140; len(a.Subtitle) > truncIdx {
                                     {a.Subtitle[:truncIdx]}...
