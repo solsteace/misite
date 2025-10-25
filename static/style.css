@@ -124,6 +124,9 @@ A layout inspired from Medium/Substack explore page
     flex-direction: column;
     gap: var(--gap-small);
 }
+.explore-layout> *:nth-child(n+3) {
+    display: none;
+}
 
 .list-entry-component {
     padding: 8px 0px;

@@ -17,21 +17,20 @@ func mapIntToString(ints []int, prefix string) []string {
 
 templ ProjectList(project []entity.Project, topTags []int) {
     <div class="explore-layout" >
-        <div 
-            class="explore-layout__left projects__exploration"
-            hx-get={fmt.Sprintf(
-                "/tags?by=project&%s", 
-                strings.Join(mapIntToString(topTags, "tagId="), "&"))}
-            hx-trigger="load"
-            hx-replace-url="false"
-            hx-push-url="false"
-            hx-target="#tags-in-projects"
-            hx-swap="innerHTML"
-        > 
+        <div class="explore-layout__left projects__exploration" > 
             <section> SEARCH FUNCTIONALITY HERE </section>
             <section>
                 <b class="projects__tags-header"> # </b>
-                <nav id="tags-in-projects" class="projects__tags"> <p> Loading... </p> </nav>
+                <nav 
+                    class="projects__tags"
+                    hx-get={fmt.Sprintf(
+                        "/tags?by=project&%s", 
+                        strings.Join(mapIntToString(topTags, "tagId="), "&"))}
+                    hx-trigger="load"
+                    hx-replace-url="false"
+                    hx-push-url="false"
+                    hx-swap="innerHTML"
+                > <p> Loading... </p> </nav>
             </section>
         </div>
 
