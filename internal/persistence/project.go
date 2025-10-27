@@ -14,26 +14,7 @@ type ProjectsQueryParam struct {
 	TagId []int
 }
 
-type pgProjects struct {
-	Id        int    `db:"id"`
-	Name      string `db:"name"`
-	Thumbnail string `db:"thumbnail"`
-	Synopsis  string `db:"synopsis"`
-
-	Tag struct {
-		Id   sql.Null[int]    `db:"id"`
-		Name sql.Null[string] `db:"name"`
-	}
-}
-
-func (p Pg) Projects(param ProjectsQueryParam) ([]entity.Project, error) {
-	if param.Limit < 1 {
-		param.Limit = 10
-	}
-	if param.Page < 1 {
-		param.Page = 1
-	}
-
+func (p Pg) Projects(param ProjectsQueryParam) ([]entity.ProjectList, error) {
 	query := `
 		WITH matching_projects_by_tag AS(
 			SELECT 
@@ -63,6 +44,12 @@ func (p Pg) Projects(param ProjectsQueryParam) ([]entity.Project, error) {
 			FROM matching_projects_by_tag
 			WHERE matching_projects_by_tag.project_id = projects.id)
 		ORDER BY projects.id`
+	if param.Limit < 1 {
+		param.Limit = 10
+	}
+	if param.Page < 1 {
+		param.Page = 1
+	}
 	args := []any{
 		nil,
 		param.Limit,
@@ -71,21 +58,31 @@ func (p Pg) Projects(param ProjectsQueryParam) ([]entity.Project, error) {
 		args[0] = param.TagId
 	}
 
-	var rows []pgProjects
+	var rows []struct {
+		Id        int    `db:"id"`
+		Name      string `db:"name"`
+		Thumbnail string `db:"thumbnail"`
+		Synopsis  string `db:"synopsis"`
+
+		Tag struct {
+			Id   sql.Null[int]    `db:"id"`
+			Name sql.Null[string] `db:"name"`
+		}
+	}
 	if err := p.db.Select(&rows, query, args...); err != nil {
-		return []entity.Project{}, fmt.Errorf(
+		return []entity.ProjectList{}, fmt.Errorf(
 			"persistence<Pg.Projects>: %w", err)
 	} else if len(rows) == 0 {
-		return []entity.Project{}, nil
+		return []entity.ProjectList{}, nil
 	}
 
-	var projects []entity.Project
-	var lastProject *entity.Project
+	var projects []entity.ProjectList
+	var lastProject *entity.ProjectList
 	var insertedTag map[int]struct{}
 	for _, r := range rows {
 		if lastProject == nil || lastProject.Id != r.Id {
 			insertedTag = map[int]struct{}{}
-			projects = append(projects, entity.Project{
+			projects = append(projects, entity.ProjectList{
 				Id:        r.Id,
 				Name:      r.Name,
 				Thumbnail: r.Thumbnail,
@@ -95,35 +92,16 @@ func (p Pg) Projects(param ProjectsQueryParam) ([]entity.Project, error) {
 		if r.Tag.Id.Valid {
 			if _, ok := insertedTag[r.Tag.Id.V]; !ok {
 				insertedTag[r.Tag.Id.V] = struct{}{}
-				lastProject.Tag = append(lastProject.Tag, entity.Tag{
+				lastProject.Tag = append(lastProject.Tag, struct {
+					Id   int
+					Name string
+				}{
 					Id:   r.Tag.Id.V,
 					Name: r.Tag.Name.V})
 			}
 		}
 	}
 	return projects, nil
-}
-
-type pgProject struct {
-	Id          int    `db:"id"`
-	Name        string `db:"name"`
-	Thumbnail   string `db:"thumbnail"`
-	Synopsis    string `db:"synopsis"`
-	Description string `db:"description"`
-
-	Serie struct {
-		Id   sql.Null[int]    `db:"id"`
-		Name sql.Null[string] `db:"name"`
-	}
-	Tag struct {
-		Id   sql.Null[int]    `db:"id"`
-		Name sql.Null[string] `db:"name"`
-	}
-	Link struct {
-		Id          sql.Null[int]    `db:"id"`
-		DisplayText sql.Null[string] `db:"display_text"`
-		Url         sql.Null[string] `db:"url"`
-	}
 }
 
 func (p Pg) Project(id int) (entity.Project, error) {
@@ -149,7 +127,28 @@ func (p Pg) Project(id int) (entity.Project, error) {
 		WHERE projects.id = $1
 		ORDER BY projects.id`
 	args := []any{id}
-	var rows []pgProject
+
+	var rows []struct {
+		Id          int    `db:"id"`
+		Name        string `db:"name"`
+		Thumbnail   string `db:"thumbnail"`
+		Synopsis    string `db:"synopsis"`
+		Description string `db:"description"`
+
+		Serie struct {
+			Id   sql.Null[int]    `db:"id"`
+			Name sql.Null[string] `db:"name"`
+		}
+		Tag struct {
+			Id   sql.Null[int]    `db:"id"`
+			Name sql.Null[string] `db:"name"`
+		}
+		Link struct {
+			Id          sql.Null[int]    `db:"id"`
+			DisplayText sql.Null[string] `db:"display_text"`
+			Url         sql.Null[string] `db:"url"`
+		}
+	}
 	if err := p.db.Select(&rows, query, args...); err != nil {
 		return entity.Project{}, fmt.Errorf(
 			"persistence<pg.Project>: %w", err)
@@ -166,7 +165,10 @@ func (p Pg) Project(id int) (entity.Project, error) {
 		Synopsis:    projectRow.Synopsis,
 		Description: projectRow.Description}
 	if projectRow.Serie.Id.Valid {
-		project.Serie = &entity.Serie{
+		project.Serie = &struct {
+			Id   int
+			Name string
+		}{
 			Id:   projectRow.Serie.Id.V,
 			Name: projectRow.Serie.Name.V}
 	}
@@ -177,7 +179,11 @@ func (p Pg) Project(id int) (entity.Project, error) {
 		if r.Link.Id.Valid {
 			if _, ok := insertedLink[r.Link.Id.V]; !ok {
 				insertedLink[r.Link.Id.V] = struct{}{}
-				project.Link = append(project.Link, entity.ProjectLink{
+				project.Link = append(project.Link, struct {
+					Id          int
+					DisplayText string
+					Url         string
+				}{
 					Id:          r.Link.Id.V,
 					DisplayText: r.Link.DisplayText.V,
 					Url:         r.Link.Url.V})
@@ -186,7 +192,10 @@ func (p Pg) Project(id int) (entity.Project, error) {
 		if r.Tag.Id.Valid {
 			if _, ok := insertedTag[r.Tag.Id.V]; !ok {
 				insertedTag[r.Tag.Id.V] = struct{}{}
-				project.Tag = append(project.Tag, entity.Tag{
+				project.Tag = append(project.Tag, struct {
+					Id   int
+					Name string
+				}{
 					Id:   r.Tag.Id.V,
 					Name: r.Tag.Name.V})
 			}
@@ -212,13 +221,13 @@ func (p Pg) CountProjectMatchingTags(tagId []int) ([]entity.Tag, []int, error) {
 		FROM tag_count_by_project AS tag_count
 		JOIN tags ON tag_count.id = tags.id
 		ORDER BY tag_count.count DESC`
+	args := []any{tagId}
 
 	var rows []struct {
 		Id      int    `db:"id"`
 		Count   int    `db:"count"`
 		TagName string `db:"name"`
 	}
-	args := []any{tagId}
 	if err := p.db.Select(&rows, query, args...); err != nil {
 		return []entity.Tag{}, []int{}, fmt.Errorf(
 			"persistence<Pg.CountProjectMatchingTags>: %w", err)

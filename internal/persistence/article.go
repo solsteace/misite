@@ -16,31 +16,7 @@ type ArticlesQueryParam struct {
 	SerieId []int
 }
 
-type pgArticles struct {
-	Id        int       `db:"id"`
-	Title     string    `db:"title"`
-	Subtitle  string    `db:"subtitle"`
-	Thumbnail string    `db:"thumbnail"`
-	CreatedAt time.Time `db:"created_at"`
-
-	Serie struct {
-		Id   sql.Null[int]    `db:"id"`
-		Name sql.Null[string] `db:"name"`
-	}
-	Tag struct {
-		Id   sql.Null[int]    `db:"id"`
-		Name sql.Null[string] `db:"name"`
-	}
-}
-
-func (p Pg) Articles(param ArticlesQueryParam) ([]entity.Article, error) {
-	if param.Limit < 1 {
-		param.Limit = 10
-	}
-	if param.Page < 1 {
-		param.Page = 1
-	}
-
+func (p Pg) Articles(param ArticlesQueryParam) ([]entity.ArticleList, error) {
 	query := `
 		WITH 
 			matching_articles_by_tag AS ( 
@@ -76,6 +52,12 @@ func (p Pg) Articles(param ArticlesQueryParam) ([]entity.Article, error) {
 				WHERE matching_articles_by_tag.article_id = articles.id)
 			AND ($2::int[] IS NULL OR articles.serie_id = ANY($2))
 		ORDER BY articles.id`
+	if param.Limit < 1 {
+		param.Limit = 10
+	}
+	if param.Page < 1 {
+		param.Page = 1
+	}
 	args := []any{
 		nil,
 		nil,
@@ -88,21 +70,36 @@ func (p Pg) Articles(param ArticlesQueryParam) ([]entity.Article, error) {
 		args[1] = param.SerieId
 	}
 
-	var rows []pgArticles
+	var rows []struct {
+		Id        int       `db:"id"`
+		Title     string    `db:"title"`
+		Subtitle  string    `db:"subtitle"`
+		Thumbnail string    `db:"thumbnail"`
+		CreatedAt time.Time `db:"created_at"`
+
+		Serie struct {
+			Id   sql.Null[int]    `db:"id"`
+			Name sql.Null[string] `db:"name"`
+		}
+		Tag struct {
+			Id   sql.Null[int]    `db:"id"`
+			Name sql.Null[string] `db:"name"`
+		}
+	}
 	if err := p.db.Select(&rows, query, args...); err != nil {
-		return []entity.Article{}, fmt.Errorf(
+		return []entity.ArticleList{}, fmt.Errorf(
 			"persistence<Pg.Articles>: %s", err)
 	} else if len(rows) == 0 {
-		return []entity.Article{}, nil
+		return []entity.ArticleList{}, nil
 	}
 
-	var articles []entity.Article
-	var lastArticle *entity.Article
+	var articles []entity.ArticleList
+	var lastArticle *entity.ArticleList
 	var insertedTags map[int]struct{}
 	for _, r := range rows {
 		if lastArticle == nil || lastArticle.Id != r.Id {
 			insertedTags = map[int]struct{}{}
-			articles = append(articles, entity.Article{
+			articles = append(articles, entity.ArticleList{
 				Id:        r.Id,
 				Title:     r.Title,
 				Subtitle:  r.Subtitle,
@@ -111,7 +108,10 @@ func (p Pg) Articles(param ArticlesQueryParam) ([]entity.Article, error) {
 			lastArticle = &articles[len(articles)-1]
 		}
 		if r.Serie.Id.Valid {
-			lastArticle.Serie = &entity.Serie{
+			lastArticle.Serie = &struct {
+				Id   int
+				Name string
+			}{
 				Id:   r.Serie.Id.V,
 				Name: r.Serie.Name.V}
 		}
@@ -125,24 +125,6 @@ func (p Pg) Articles(param ArticlesQueryParam) ([]entity.Article, error) {
 		}
 	}
 	return articles, nil
-}
-
-type pgArticle struct {
-	Id        int       `db:"id"`
-	Title     string    `db:"title"`
-	Subtitle  string    `db:"subtitle"`
-	Content   string    `db:"content"`
-	Thumbnail string    `db:"thumbnail"`
-	CreatedAt time.Time `db:"created_at"`
-
-	Serie struct {
-		Id   sql.Null[int]    `db:"id"`
-		Name sql.Null[string] `db:"name"`
-	}
-	Tag struct {
-		Id   sql.Null[int]    `db:"id"`
-		Name sql.Null[string] `db:"name"`
-	}
 }
 
 func (p Pg) Article(id int) (entity.Article, error) {
@@ -164,7 +146,24 @@ func (p Pg) Article(id int) (entity.Article, error) {
 		LEFT JOIN tags ON article_tags.tag_id = tags.id
 		WHERE articles.id = $1`
 	args := []any{id}
-	var rows []pgArticle
+
+	var rows []struct {
+		Id        int       `db:"id"`
+		Title     string    `db:"title"`
+		Subtitle  string    `db:"subtitle"`
+		Content   string    `db:"content"`
+		Thumbnail string    `db:"thumbnail"`
+		CreatedAt time.Time `db:"created_at"`
+
+		Serie struct {
+			Id   sql.Null[int]    `db:"id"`
+			Name sql.Null[string] `db:"name"`
+		}
+		Tag struct {
+			Id   sql.Null[int]    `db:"id"`
+			Name sql.Null[string] `db:"name"`
+		}
+	}
 	if err := p.db.Select(&rows, query, args...); err != nil {
 		return entity.Article{}, fmt.Errorf(
 			"persistence<Pg.Article>: %w", err)
@@ -183,7 +182,10 @@ func (p Pg) Article(id int) (entity.Article, error) {
 	insertedTags := map[int]struct{}{}
 	for _, r := range rows {
 		if r.Serie.Id.Valid {
-			article.Serie = &entity.Serie{
+			article.Serie = &struct {
+				Id   int
+				Name string
+			}{
 				Id:   r.Serie.Id.V,
 				Name: r.Serie.Name.V}
 		}

@@ -17,10 +17,10 @@ func NewService(store *persistence.Pg) Service {
 	return Service{store: store}
 }
 
-func (s Service) Articles(param persistence.ArticlesQueryParam) ([]entity.Article, error) {
+func (s Service) Articles(param persistence.ArticlesQueryParam) ([]entity.ArticleList, error) {
 	articles, err := s.store.Articles(param)
 	if err != nil {
-		return []entity.Article{}, fmt.Errorf(
+		return []entity.ArticleList{}, fmt.Errorf(
 			"service<Service.Articles>: %w", err)
 	}
 	return articles, nil
@@ -35,7 +35,7 @@ func (s Service) Article(id int) (entity.Article, error) {
 	return article, nil
 }
 
-func (s Service) MostTagsOnArticles(articles []entity.Article, limit int) []int {
+func (s Service) MostTagsOnArticles(articles []entity.ArticleList, limit int) []int {
 	tags := make(map[int]int)
 	tagIds := []int{}
 	for _, a := range articles {
@@ -72,10 +72,10 @@ func (s Service) CountArticleMatchingTags(tagIds []int) ([]entity.Tag, []int, er
 	return tags, count, nil
 }
 
-func (s Service) Projects(param persistence.ProjectsQueryParam) ([]entity.Project, error) {
+func (s Service) Projects(param persistence.ProjectsQueryParam) ([]entity.ProjectList, error) {
 	projects, err := s.store.Projects(param)
 	if err != nil {
-		return []entity.Project{}, fmt.Errorf(
+		return []entity.ProjectList{}, fmt.Errorf(
 			"service<Service.Projects>: %w", err)
 	}
 	return projects, nil
@@ -90,7 +90,7 @@ func (s Service) Project(id int) (entity.Project, error) {
 	return project, nil
 }
 
-func (s Service) MostTagsOnProjects(projects []entity.Project, limit int) []int {
+func (s Service) MostTagsOnProjects(projects []entity.ProjectList, limit int) []int {
 	tags := make(map[int]int)
 	tagIds := []int{}
 	for _, p := range projects {

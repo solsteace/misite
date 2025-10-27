@@ -2,11 +2,6 @@ package entity
 
 import "time"
 
-type Serie struct {
-	Id   int
-	Name string
-}
-
 // The model for viewing `serie` entry in `serie` page
 type Serie2 struct {
 	Id          int

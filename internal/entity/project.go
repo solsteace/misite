@@ -8,7 +8,39 @@ type Project struct {
 	Synopsis    string
 	Description string
 
-	Serie *Serie        // an article series that accompanies the project, if any (some kind of devblog, if you will)
-	Tag   []Tag         // the associated tags
-	Link  []ProjectLink // the related links (deployment, references, etc.)
+	// an article serie that accompanies the project, if any (some kind of devblog, if you will)
+	Serie *struct {
+		Id   int
+		Name string
+	}
+	// the associated tags
+	Tag []struct {
+		Id   int
+		Name string
+	}
+	// the related links (deployment, references, etc.)
+	Link []struct {
+		Id          int
+		DisplayText string
+		Url         string
+	}
+}
+
+type ProjectList struct {
+	Id        int
+	Name      string
+	Thumbnail string
+	Synopsis  string
+
+	// an article serie that accompanies the project, if any (some kind of devblog, if you will)
+	Serie *struct {
+		Id   int
+		Name string
+	}
+
+	// the associated tags
+	Tag []struct {
+		Id   int
+		Name string
+	}
 }

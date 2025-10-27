@@ -11,6 +11,35 @@ type Article struct {
 	Thumbnail string
 	CreatedAt time.Time
 
-	Serie *Serie // an article series that accompanies the project, if any (some kind of devblog, if you will)
-	Tag   []Tag  // the associated tags
+	// an article series that accompanies the project, if any (some kind of devblog, if you will)
+	Serie *struct {
+		Id   int
+		Name string
+	}
+
+	// the associated tags
+	Tag []struct {
+		Id   int
+		Name string
+	}
+}
+
+type ArticleList struct {
+	Id        int
+	Title     string
+	Subtitle  string
+	Thumbnail string
+	CreatedAt time.Time
+
+	// an article series that accompanies the project, if any (some kind of devblog, if you will)
+	Serie *struct {
+		Id   int
+		Name string
+	}
+
+	// the associated tags
+	Tag []struct {
+		Id   int
+		Name string
+	}
 }
