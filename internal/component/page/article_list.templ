@@ -7,11 +7,11 @@ import "strings"
 import "github.com/solsteace/misite/internal/component/utility"
 
 templ ArticleList(article []entity.ArticleList, topTags []int) {
-    <div class="explore-layout">
-        <div class="explore-layout__left articles__exploration" > 
+    <div class="lyt__1x2 lyt__1x2--1-3 exploration">
+        <div class="exploration__tools"> 
             <section> SEARCH FUNCTIONALITY HERE </section>
             <section>
-                <b class="articles__tags-header"> # </b>
+                <b class="u__h u__h--4"> # </b>
                 <nav 
                     class="articles__tags"
                     hx-get={fmt.Sprintf(
@@ -28,48 +28,47 @@ templ ArticleList(article []entity.ArticleList, topTags []int) {
         <div
             hx-target="#page"
             hx-swap="innerHTML"
-            class="explore-layout__right"
+            class="cmp__list"
         > 
             for idx, a := range article {
                 <div 
-                    class="list-entry-component"
+                    class="lyt__1x2 lyt__1x2--1-3 exploration__entry"
                     hx-trigger="click"
                     hx-get={fmt.Sprintf("/article/%d", a.Id)}
                 >
-                    <div class="list-entry-component__data articles-entry">
-                        <div class="articles-entry__serie-and-timestamp util--dim">
-                            <div>
-                                if diff := time.Now().Sub(a.CreatedAt); diff < time.Hour*24*14 {
-                                    <p> {fmt.Sprintf("%.0f", diff.Hours() / 24)} days ago </p>
-                                } else if diff < time.Hour*24*365{
-                                    <p> {a.CreatedAt.Format("Jan 02")} </p>
-                                } else {
-                                    <p> {a.CreatedAt.Format("Jan 02, 2006")}</p>
-                                }
-                            </div>
+                    <div class="cmp__image exploration__entry-thumbnail">
+                        <img src={a.Thumbnail}>
+                    </div>
+                    <div class="exploration__entry-detail">
+                        <div class="exploration__entry-aside u__dim">
+                            if diff := time.Now().Sub(a.CreatedAt); diff < time.Hour*24*14 {
+                                <p> {fmt.Sprintf("%.0f", diff.Hours() / 24)} days ago </p>
+                            } else if diff < time.Hour*24*365{
+                                <p> {a.CreatedAt.Format("Jan 02")} </p>
+                            } else {
+                                <p> {a.CreatedAt.Format("Jan 02, 2006")}</p>
+                            }
 
                             if a.Serie != nil {
-                                <div class="articles-entry__serie">
-                                    <p> · In </p>
-                                    <a 
-                                        class="articles-entry__serie-link"
-                                        href={fmt.Sprintf("/serie/%d", a.Serie.Id)}
-                                        hx-trigger="click consume"
-                                        hx-get={fmt.Sprintf("/serie/%d", a.Serie.Id)}
-                                        hx-target="#page"
-                                        hx-swap="innerHTML"
-                                        hx-replace-url="true"
-                                        hx-push-url="true"
-                                    >
-                                        {a.Serie.Name} 
-                                    </a> 
-                                </div>
+                                <p> · In </p>
+                                <a 
+                                    href={fmt.Sprintf("/serie/%d", a.Serie.Id)}
+                                    hx-trigger="click consume"
+                                    hx-get={fmt.Sprintf("/serie/%d", a.Serie.Id)}
+                                    hx-target="#page"
+                                    hx-swap="innerHTML"
+                                    hx-replace-url="true"
+                                    hx-push-url="true"
+                                > {a.Serie.Name} </a> 
                             }
                         </div>
 
-                        <div class="articles-entry__title-subtitle">
-                            <p class="u__h u__h--4"> {a.Title} </p>
-                            <p class="articles-entry__subtitle"> 
+                        <div>
+                            <a 
+                                href={fmt.Sprintf("/article/%d", a.Id)}
+                                class="u__h u__h--4"
+                            > {a.Title} </a>
+                            <p> 
                                 if truncIdx := 169; len(a.Subtitle) > truncIdx {
                                     {a.Subtitle[:truncIdx]}...
                                 }  else {
@@ -80,11 +79,11 @@ templ ArticleList(article []entity.ArticleList, topTags []int) {
 
                         if len(a.Tag) > 0 {
                             <section>
-                                <ul class="badges">
+                                <ul class="cmp__badge-list tag-badge-list">
                                     for _, t := range a.Tag {
-                                        <li class="badge-item"> 
+                                        <li> 
                                             <a
-                                                class="badge-item__link"
+                                                class="tag-badge-list__tag"
                                                 hx-trigger="click consume"
                                                 hx-target="#page"
                                                 hx-get={fmt.Sprintf("%s?tagId=%d", utility.ExploreArticleUrl, t.Id)}
@@ -97,15 +96,11 @@ templ ArticleList(article []entity.ArticleList, topTags []int) {
                                 </ul>
                             </section>
                         }
-
-                    </div>
-                    <div class="list-entry-component__thumbnail">
-                        <img src={a.Thumbnail}>
                     </div>
                 </div>
 
                 if idx < len(article) - 1 {
-                    <div class="list-entry-component__delimiter"> </div>
+                    <div class="cmp__list-delimiter"> </div>
                 }
             }
         </div>

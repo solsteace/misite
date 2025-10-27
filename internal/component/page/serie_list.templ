@@ -4,27 +4,26 @@ import "github.com/solsteace/misite/internal/entity"
 import "fmt"
 
 templ SerieList(serieList []entity.SerieList) {
-    <div class="explore-layout" >
-        <div class="explore-layout__left serie-list__exploration">
+    <div class="lyt__1x2 lyt__1x2--1-3 exploration" >
+        <div class="exploration__tools">
             <section> SEARCH FUNCTIONALITY HERE </section>
         </div>
-        <div class="explore-layout__right">
+        <div class="cmp__list">
             for idx, sl := range serieList {
                 <a 
-                    class="cmp__list"
                     href={fmt.Sprintf("/serie/%d", sl.Id)}
                     hx-trigger="click"
                     hx-get={fmt.Sprintf("/serie/%d", sl.Id)}
                     hx-target="#page"
                 >
-                    <div class="lyt__1x2 lyt__1x2--1-3 cmp__textImage serie-list__entries">
-                        <div class="cmp__image serie-list__entry-thumbnail">
+                    <div class="lyt__1x2 lyt__1x2--1-3 exploration__entry">
+                        <div class="cmp__image exploration__entry-thumbnail">
                             <img src={sl.Thumbnail}>
                         </div>
-                        <div class="serie-list__entry-text">
+                        <div class="exploration__entry-detail">
                             <p class="u__h u__h--4"> {sl.Name} </p>
                             <p> 
-                                if truncIdx := 256; len(sl.Description) > truncIdx {
+                                if truncIdx := 169; len(sl.Description) > truncIdx {
                                     {sl.Description[:truncIdx]}...
                                 }  else {
                                     {sl.Description}
