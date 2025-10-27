@@ -50,9 +50,9 @@ templ Project(project entity.Project) {
                 <nav class="project-links">
                     <b class="project-links__header"> Links </b>
                     if project.Serie != nil {
-                        <p> Featured in 
+                        <p class="u__dim"> 
+                            Featured in 
                             <a
-                                class="util--dim"
                                 hx-get={fmt.Sprintf("/serie/%d", project.Serie.Id)}
                                 hx-trigger="click"
                                 hx-target="#page"

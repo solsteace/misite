@@ -35,8 +35,11 @@ func (p Pg) Projects(param ProjectsQueryParam) ([]entity.ProjectList, error) {
 			projects.thumbnail AS "thumbnail",
 			projects.synopsis AS "synopsis",
 			tags.id AS "tag.id",
-			tags.name AS "tag.name"
+			tags.name AS "tag.name",
+			series.id AS "serie.id",
+			series.name AS "serie.name"
 		FROM projects
+		LEFT JOIN series ON projects.devblog_serie = series.id
 		LEFT JOIN project_tags ON project_tags.project_id = projects.id
 		LEFT JOIN tags ON project_tags.tag_id = tags.id
 		WHERE
@@ -64,6 +67,10 @@ func (p Pg) Projects(param ProjectsQueryParam) ([]entity.ProjectList, error) {
 		Thumbnail string `db:"thumbnail"`
 		Synopsis  string `db:"synopsis"`
 
+		Serie struct {
+			Id   sql.Null[int]    `db:"id"`
+			Name sql.Null[string] `db:"name"`
+		}
 		Tag struct {
 			Id   sql.Null[int]    `db:"id"`
 			Name sql.Null[string] `db:"name"`
@@ -99,6 +106,14 @@ func (p Pg) Projects(param ProjectsQueryParam) ([]entity.ProjectList, error) {
 					Id:   r.Tag.Id.V,
 					Name: r.Tag.Name.V})
 			}
+		}
+		if r.Serie.Id.Valid && lastProject.Serie == nil {
+			lastProject.Serie = &struct {
+				Id   int
+				Name string
+			}{
+				r.Serie.Id.V,
+				r.Serie.Name.V}
 		}
 	}
 	return projects, nil

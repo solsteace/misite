@@ -70,7 +70,7 @@ templ ArticleList(article []entity.ArticleList, topTags []int) {
                         <div class="articles-entry__title-subtitle">
                             <p class="u__h u__h--4"> {a.Title} </p>
                             <p class="articles-entry__subtitle"> 
-                                if truncIdx := 140; len(a.Subtitle) > truncIdx {
+                                if truncIdx := 169; len(a.Subtitle) > truncIdx {
                                     {a.Subtitle[:truncIdx]}...
                                 }  else {
                                     {a.Subtitle}

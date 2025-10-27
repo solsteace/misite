@@ -46,14 +46,34 @@ templ ProjectList(project []entity.ProjectList, topTags []int) {
                     hx-get={fmt.Sprintf("/project/%d", p.Id)}
                 >
                     <div class="list-entry-component__data projects-entry">
-                        <p class="u__h u__h--4"> {p.Name} </p>
-                        <p> 
-                            if truncIdx := 220; len(p.Synopsis) > truncIdx {
-                                {p.Synopsis[:truncIdx]}...
-                            }  else {
-                                {p.Synopsis}
-                            }
-                        </p>
+                        if p.Serie != nil {
+                            <div class="articles-entry__serie">
+                                <p class="u__dim">
+                                    Featured in
+                                    <a 
+                                        class="articles-entry__serie-link"
+                                        href={fmt.Sprintf("/serie/%d", p.Serie.Id)}
+                                        hx-trigger="click consume"
+                                        hx-get={fmt.Sprintf("/serie/%d", p.Serie.Id)}
+                                        hx-target="#page"
+                                        hx-swap="innerHTML"
+                                        hx-replace-url="true"
+                                        hx-push-url="true"
+                                    > {p.Serie.Name} </a> 
+                                </p>
+                            </div>
+                        }
+
+                        <div>
+                            <p class="u__h u__h--4"> {p.Name} </p>
+                            <p> 
+                                if truncIdx := 169; len(p.Synopsis) > truncIdx {
+                                    {p.Synopsis[:truncIdx]}...
+                                }  else {
+                                    {p.Synopsis}
+                                }
+                            </p>
+                        </div>
 
                         if len(p.Tag) > 0 {
                             <section>
