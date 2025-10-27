@@ -94,17 +94,16 @@ func (p Pg) Serie(id int) (entity.Serie2, error) {
 			articles.subtitle AS "article.synopsis",
 			articles.thumbnail AS "article.thumbnail",
 			articles.created_at AS "article.created_at",
-			article_series.order AS "article.order",
+			articles.serie_order AS "article.order",
 			projects.id AS "project.id",
 			projects.name AS "project.name",
 			projects.thumbnail AS "project.thumbnail",
 			projects.synopsis AS "project.synopsis"
 		FROM series
 		LEFT JOIN projects ON projects.devblog_serie = series.id
-		LEFT JOIN article_series ON article_series.serie_id = series.id
-		LEFT JOIN articles ON article_series.article_id = articles.id
+		LEFT JOIN articles ON articles.serie_id = series.id
 		WHERE series.id = $1
-		ORDER BY article_series.order`
+		ORDER BY articles.serie_order`
 	args := []any{id}
 	if err := p.db.Select(&rows, query, args...); err != nil {
 		return entity.Serie2{}, fmt.Errorf(

@@ -69,13 +69,12 @@ func (p Pg) Articles(param ArticlesQueryParam) ([]entity.Article, error) {
 		FROM articles
 		LEFT JOIN article_tags ON article_tags.article_id = articles.id
 		LEFT JOIN tags ON article_tags.tag_id = tags.id
-		LEFT JOIN article_series ON article_series.article_id = articles.id
-		LEFT JOIN series ON article_series.serie_id = series.id
+		LEFT JOIN series ON articles.serie_id = series.id
 		WHERE 
 			(SELECT true
 				FROM matching_articles_by_tag
 				WHERE matching_articles_by_tag.article_id = articles.id)
-			AND ($2::int[] IS NULL OR article_series.serie_id = ANY($2))
+			AND ($2::int[] IS NULL OR articles.serie_id = ANY($2))
 		ORDER BY articles.id`
 	args := []any{
 		nil,
@@ -160,12 +159,10 @@ func (p Pg) Article(id int) (entity.Article, error) {
 			series.id AS "serie.id",
 			series.name AS "serie.name"
 		FROM articles
-		LEFT JOIN article_series ON articles.id = article_series.article_id
-		LEFT JOIN series ON article_series.serie_id = series.id
+		LEFT JOIN series ON articles.serie_id = series.id
 		LEFT JOIN article_tags ON articles.id = article_tags.article_id
 		LEFT JOIN tags ON article_tags.tag_id = tags.id
-		WHERE articles.id = $1
-		ORDER BY articles.id`
+		WHERE articles.id = $1`
 	args := []any{id}
 	var rows []pgArticle
 	if err := p.db.Select(&rows, query, args...); err != nil {
