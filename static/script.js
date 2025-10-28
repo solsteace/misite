@@ -1,3 +1,15 @@
+const ATTR_THEME = "siteTheme"
+document.documentElement.dataset[ATTR_THEME] = "light"
+
+// Kudos: https://medium.com/@cerutti.alexander/a-mostly-complete-guide-to-theme-switching-in-css-and-js-c4992d5fd357
+const ToggleTheme = function() {
+    if(document.documentElement.dataset[ATTR_THEME] == "dark") {
+        document.documentElement.dataset[ATTR_THEME] = "light"
+        return
+    }
+    document.documentElement.dataset[ATTR_THEME] = "dark"
+}
+
 const FindAllArticleHeaders = function(targetElement) {
     const headerTags = ["h1", "h2", "h3", "h4", "h5", "h6"]
     const headers = [];

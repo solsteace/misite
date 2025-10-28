@@ -1,7 +1,11 @@
 package page
 
-templ Home() {
-    <div> 
-        <h2> You're at the place where things should've begun </h2>
-    </div>
+templ Home(indexUrl string) {
+    <span 
+        hx-get={indexUrl}
+        hx-trigger="load"
+        hx-replace-url="false"
+        hx-push-url="false"
+        hx-swap="innerHTML"
+        hx-target="#page" />
 }

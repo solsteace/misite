@@ -1,0 +1,32 @@
+<main>
+    <h1> Oh hey, what's up?  </h1>
+
+
+    <script>
+        const previewAlertContainer = document.createElement("div")
+        previewAlertContainer.style.position = "absolute"
+        previewAlertContainer.style.inset = "0"
+        previewAlertContainer.style.pointerEvents = "none"
+
+        const previewAlert = document.createElement("div");
+        previewAlert.style.position = "sticky"
+        previewAlert.style.top = "20px"
+        previewAlert.style.background = "var(--bg-color)"
+        previewAlert.style.padding = "8px"
+        previewAlert.style.border = "1px solid var(--primary-color)"
+        previewAlert.style.opacity = "0.8"
+        previewAlert.style.transition = "opacity 0.5s"
+        setTimeout(() => {
+            previewAlert.style.opacity = "0.2"
+        }, 1000)
+
+        const previewAlertText = document.createElement("p")
+        previewAlertText.innerHTML = "If you're seeing this, that means the site is a preview using dummy data. This message is triggered by the main page of this site."
+        previewAlertText.style.fontSize = "8px"
+        previewAlertText.style.textAlign = "center"
+
+        previewAlert.appendChild(previewAlertText)
+        previewAlertContainer.append(previewAlert)
+        document.body.appendChild(previewAlertContainer)
+    </script>
+</main>

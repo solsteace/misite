@@ -8,12 +8,17 @@ import (
 var (
 	dB_URL string
 
+	iNDEX_URL  string
 	aLPINE_URL string
 	hTMX_URL   string
 )
 
 func LoadEnv() {
 	dB_URL = os.Getenv("DB_URL")
+	iNDEX_URL = os.Getenv("INDEX_URL")
+	if iNDEX_URL == "" {
+		iNDEX_URL = "/static/index.html"
+	}
 
 	// Use offline scripts instead of fetching it from CDN
 	aLPINE_URL = os.Getenv("ALPINEJS_URL")
