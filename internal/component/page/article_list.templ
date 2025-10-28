@@ -68,13 +68,9 @@ templ ArticleList(article []entity.ArticleList, topTags []int) {
                                 href={fmt.Sprintf("/article/%d", a.Id)}
                                 class="u__h u__h--4"
                             > {a.Title} </a>
-                            <p> 
-                                if truncIdx := 169; len(a.Subtitle) > truncIdx {
-                                    {a.Subtitle[:truncIdx]}...
-                                }  else {
-                                    {a.Subtitle}
-                                }
-                            </p>
+                            <div class="cmp__teaser">
+                                <p> {a.Subtitle} </p>
+                            </div>
                         </div>
 
                         if len(a.Tag) > 0 {
@@ -98,6 +94,7 @@ templ ArticleList(article []entity.ArticleList, topTags []int) {
                         }
                     </div>
                 </div>
+
 
                 if idx < len(article) - 1 {
                     <div class="cmp__list-delimiter"> </div>

@@ -8,6 +8,7 @@ body {
     --gap-small: 8px;
     --gap-medium: 16px;
     --gap-large: 28px;
+    --col-transparent: rgba(0, 0, 0, 0);
 }
 
 * {
@@ -20,7 +21,7 @@ body {
 }
 
 body {
-    padding: 0px clamp(20px, 10%, 140px);
+    padding: 0px clamp(40px, 8%, 140px);
 }
 
 ul {
@@ -163,6 +164,24 @@ SITE
 
 
 
+.cmp__teaser {
+    position: relative;
+    overflow: clip;
+}
+.cmp__teaser > *:last-child::after {
+    display: block;
+    content: "";
+    position: absolute;
+    height: inherit;
+    inset: 0;
+    background: linear-gradient(
+        to bottom, 
+        var(--col-transparent), 
+        var(--bg-light)); /* Go complete <color> at <percentage> portion of element from starting point */
+}
+
+
+
 /* ====================
     Utilities (u)
 ==================== */
@@ -203,6 +222,7 @@ h6, .u__h--6 {
 .exploration__entry {
     align-items: center;
     flex-direction: row-reverse;
+    gap: var(--gap-medium);
     flex-wrap: wrap;
     padding: 8px 0px;
 }
@@ -219,6 +239,13 @@ h6, .u__h--6 {
     flex-direction: column;
     gap: var(--gap-small);
 }
+.exploration__entry-thumbnail > img {
+    max-height: 200px;
+}
+.exploration__preview {
+    max-height: 60px; /* A magic number. How to make this "2.5 lines max"?*/
+}
+
 
 
 .specification {
@@ -255,7 +282,7 @@ h6, .u__h--6 {
 .specification__extra {
     display: flex;
     flex-direction: column;
-    gap: var(--gap-small)
+    gap: var(--gap-small);
 }
 
 

@@ -67,13 +67,9 @@ templ ProjectList(project []entity.ProjectList, topTags []int) {
 
                         <div>
                             <p class="u__h u__h--4"> {p.Name} </p>
-                            <p> 
-                                if truncIdx := 169; len(p.Synopsis) > truncIdx {
-                                    {p.Synopsis[:truncIdx]}...
-                                }  else {
-                                    {p.Synopsis}
-                                }
-                            </p>
+                            <div class="cmp__teaser">
+                                <p> {p.Synopsis} </p>
+                            </div>
                         </div>
 
                         if len(p.Tag) > 0 {
