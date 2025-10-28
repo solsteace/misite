@@ -2,12 +2,26 @@ const ATTR_THEME = "siteTheme"
 document.documentElement.dataset[ATTR_THEME] = "light"
 
 // Kudos: https://medium.com/@cerutti.alexander/a-mostly-complete-guide-to-theme-switching-in-css-and-js-c4992d5fd357
-const ToggleTheme = function() {
-    if(document.documentElement.dataset[ATTR_THEME] == "dark") {
-        document.documentElement.dataset[ATTR_THEME] = "light"
-        return
+const ChangeTheme = function(theme = null) {
+    let newTheme = theme
+    if(!newTheme) {
+        switch (document.documentElement.dataset[ATTR_THEME]) {
+            case "dark": newTheme = "light"; break;
+            case "light": newTheme = "dark"; break;
+        }
     }
-    document.documentElement.dataset[ATTR_THEME] = "dark"
+    document.documentElement.dataset[ATTR_THEME] = newTheme
+}
+
+const colorSchemePreference = window.matchMedia?.("(prefers-color-scheme:dark)")
+if(colorSchemePreference) {
+    if(colorSchemePreference.matches) {
+        ChangeTheme("dark")
+    }
+
+    colorSchemePreference.addEventListener("change", e => {
+        console.log("bjir")
+    })
 }
 
 const FindAllArticleHeaders = function(targetElement) {

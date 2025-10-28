@@ -22,17 +22,20 @@ const (
 type Controller struct {
 	service service.Service
 
+	indexUrl    string // url to homepage
 	alpinejsUrl string // url to alpinejs script (unrelated to controller, but we're gonna stick with these infra anyway for now)
 	htmxUrl     string // url to htmx script (unrelated to controller, but we're gonna stick with these infra anyway for now)
 }
 
 func NewController(
 	service service.Service,
+	indexUrl string,
 	alpinejsUrl string,
 	htmxUrl string,
 ) Controller {
 	return Controller{
 		service:     service,
+		indexUrl:    indexUrl,
 		alpinejsUrl: alpinejsUrl,
 		htmxUrl:     htmxUrl}
 }
@@ -62,7 +65,7 @@ func (c Controller) serveWithBase(
 }
 
 func (c Controller) Home(w http.ResponseWriter, r *http.Request) error {
-	pageComponent := page.Home()
+	pageComponent := page.Home(c.indexUrl)
 	if c.requestNeedsBase(r) {
 		return c.serveWithBase(pageComponent, w, r)
 	}

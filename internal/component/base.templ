@@ -12,42 +12,58 @@ templ Base(alpinejsUrl, htmxUrl string) {
             hx-push-url="true"
             hx-replace-url="true"
         >
-            <nav
-                class="site-nav"
-                hx-target="#page"
-                hx-swap="innerHTML"
-            >
-                <ul>
-                    <li>
-                        <a
-                            hx-trigger="click"
-                            hx-get="/home"
-                        > Home </a>
-                    </li>
-                    <li>
-                        <a
-                            hx-trigger="click"
-                            hx-get="/projects"
-                        > Projects </a>
-                    </li>
-                    <li>
-                        <a
-                            hx-trigger="click"
-                            hx-get="/articles"
-                        > Articles </a>
-                    </li>
-                    <li>
-                        <a
-                            hx-trigger="click"
-                            hx-get="/series"
-                        > Series </a>
-                    </li>
-                </ul>
-            </nav>
+            <div class="site__topbar">
+                <nav
+                    hx-target="#page"
+                    hx-swap="innerHTML"
+                >
+                    <ul class="site__nav">
+                        <li>
+                            <a
+                                hx-trigger="click"
+                                hx-get="/home"
+                            > Home </a>
+                        </li>
+                        <li>
+                            <a
+                                hx-trigger="click"
+                                hx-get="/projects"
+                            > Projects </a>
+                        </li>
+                        <li>
+                            <a
+                                hx-trigger="click"
+                                hx-get="/articles"
+                            > Articles </a>
+                        </li>
+                        <li>
+                            <a
+                                hx-trigger="click"
+                                hx-get="/series"
+                            > Series </a>
+                        </li>
+                    </ul>
+                </nav>
 
-            <div id="page" class="site-content"> 
+                <div class="site__extra">
+                    <div class="site__theme">
+                        <button 
+                            type="button"
+                            id="theme-changer" 
+                            style="color: var(--test-color)"
+                        > </button>
+                    </div>
+                    <button>
+                        <a href="https://github.com/solsteace/misite/"> Source </a>
+                    </button>
+                </div>
+            </div>
+
+            <div id="page" class="site__content"> 
                 {children...}
             </div>
         </body>
+
+        <script src="/static/post-load.js"></script>
     </html>
 }
