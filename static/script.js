@@ -19,20 +19,18 @@ if(colorSchemePreference) {
         ChangeTheme("dark")
     }
 
-    colorSchemePreference.addEventListener("change", e => {
-        console.log("bjir")
-    })
+    colorSchemePreference.addEventListener("change", e => { })
 }
 
 const FindAllArticleHeaders = function(targetElement) {
-    const headerTags = ["h1", "h2", "h3", "h4", "h5", "h6"]
+    const headerTags = ["h2", "h3", "h4", "h5", "h6"]
     const headers = [];
     targetElement.childNodes.forEach((child) => {
         let isHeader = false
         for(idx = 0; idx < headerTags.length; idx++) {
             if(child.nodeName.toLowerCase() == headerTags[idx]) {
                 isHeader = true
-                headers.push([idx, child])
+                headers.push([idx + 1, child])
                 break;
             }
         }
@@ -57,20 +55,44 @@ const MakeOutline = function(articleElemId, outlineElemId) {
         return
     }
 
-    const headers = {}
-    FindAllArticleHeaders(article).forEach((header, idx) => {
-        const elem = header[1]
-
-        const headerText = elem.innerHTML.toLowerCase().replaceAll(" ", "-")
-        if(!headers[headerText]) {
-            headers[headerText] = 0
+    let currentLevel = 0 // Bypass H1, which usually be the title
+    let nextUlEl
+    const root = document.createElement("ul")
+    const headerStack = [root]
+    const heading = {}
+    FindAllArticleHeaders(article).forEach((header, _) => {
+        // Generate id
+        const [level, hEl] = header
+        const headingText = hEl.innerHTML.toLowerCase().replaceAll(" ", "-")
+        if(!heading[headingText]) {
+            heading[headingText] = 0
         }
-        headers[headerText] += 1
-        elem.id = `${headerText}-${headers[headerText]}`
+        heading[headingText] += 1
 
-        outlineEntryElem = document.createElement("a")
-        outlineEntryElem.innerHTML = elem.innerHTML
-        outlineEntryElem.href= `#${elem.id}`
-        outline.appendChild(outlineEntryElem)
+        // Create current entry
+        const liEl = document.createElement("li")
+        const aEl = document.createElement("a")
+        const hId = `${headingText}-${heading[headingText]}`
+        aEl.innerHTML = hEl.innerHTML
+        aEl.href= `#${hId}`
+        hEl.id = hId
+        liEl.appendChild(aEl)
+
+        if(level > currentLevel) {
+            if(nextUlEl) {
+                headerStack.push(nextUlEl)
+            }
+            nextUlEl = document.createElement("ul")
+        } else if(level < currentLevel) {
+            levelDifference = currentLevel - level
+            for(let i = 0; i < levelDifference; i++) {
+                headerStack.pop()
+            }
+        } 
+        liEl.appendChild(nextUlEl) // Note: this will move the element from old parent node to the new one
+        headerStack.at(-1).appendChild(liEl)
+        currentLevel = level
     })
+
+    outline.appendChild(root)
 }

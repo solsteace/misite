@@ -154,7 +154,12 @@ a {
 /* ====================
     Utilities (u)
 ==================== */
-.u__h {
+h1, .u__h--1,
+h2, .u__h--2,
+h3, .u__h--3,
+h4, .u__h--4,
+h5, .u__h--5,
+h6, .u__h--6 {
     font-weight: bold;
 }
 h1, .u__h--1 {
@@ -188,17 +193,12 @@ h6, .u__h--6 {
     flex-direction: row-reverse;
     gap: var(--gap-large);
 }
+.exploration__entries {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-medium)
+}
 .exploration__entry {
-    align-items: center;
-    flex-direction: row-reverse;
-    gap: var(--gap-medium);
-    flex-wrap: wrap;
-    padding: 8px 0px;
-}
-.exploration__entry > *{
-    min-width: 169px;
-}
-.exploration__entry-detail {
     display: flex;
     flex-direction: column;
     gap: var(--gap-small);
@@ -208,39 +208,64 @@ h6, .u__h--6 {
     flex-direction: column;
     gap: var(--gap-small);
 }
-.exploration__entry-thumbnail > img {
-    max-height: 200px;
-}
-.exploration__preview {
-    max-height: 60px; /* A magic number. How to make this "2.5 lines max"?*/
+.exploration__entries > .cmp__list-delimiter {
+    border-bottom: 0px;
+    padding: var(--gap-small) 0px;
 }
 
 
 
 .specification {
     display: flex;
-    flex-direction: column;
+    flex-direction: row-reverse;
     gap: var(--gap-large);
 }
-.specification__header {
+.specification__content-header {
     display: flex;
     flex-direction: column;
     gap: var(--gap-tiny);
 }
 .specification__outline {
     top: var(--gap-medium);
+    width: 100%;
 }
-.specification__thumbnail > img {
-    max-height: 360px;
+.specification__outline > ul {
+    width: 100%;
+    font-size: 1rem;
+}
+.specification__outline > ul ul {
+    font-size: 0.93em;
+    margin-left: var(--gap-medium);
+}
+.specification__outline ul {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-small);
+}
+.specification__outline li{
+    font-size: inherit;
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-small);
+}
+.specification__outline a {
+    line-height: 1.1rem;
+    font-size: inherit;
+}
+.specification__outline
+.specification__content,
+.specification__content > *:last-child,
+.specification__content > *:last-child * {
+    display: flex;
+    flex-direction: column;
 }
 .specification__content {
     display: flex;
-    flex-direction: row-reverse;
+    flex-direction: column;
     gap: var(--gap-large);
 }
-.specification__article * {
-    display: flex;
-    flex-direction: column;
+.specification__content > *:last-child,
+.specification__content > *:last-child * {
     gap: var(--gap-medium);
 }
 .specification__extras {

@@ -11,7 +11,7 @@ templ ArticleList(article []entity.ArticleList, topTags []int) {
         <div class="exploration__tools"> 
             <section> SEARCH FUNCTIONALITY HERE </section>
             <section>
-                <b class="u__h u__h--4"> # </b>
+                <b class="u__h--4"> # </b>
                 <nav 
                     class="articles__tags"
                     hx-get={fmt.Sprintf(
@@ -25,21 +25,10 @@ templ ArticleList(article []entity.ArticleList, topTags []int) {
             </section>
         </div>
 
-        <div
-            hx-target="#page"
-            hx-swap="innerHTML"
-            class="cmp__list"
-        > 
+        <div class="cmp__list exploration__entries" > 
             for idx, a := range article {
-                <div 
-                    class="lyt__1x2 lyt__1x2--1-3 exploration__entry"
-                    hx-trigger="click"
-                    hx-get={fmt.Sprintf("/article/%d", a.Id)}
-                >
-                    <div class="cmp__image exploration__entry-thumbnail">
-                        <img src={a.Thumbnail}>
-                    </div>
-                    <div class="exploration__entry-detail">
+                <div>
+                    <div class="exploration__entry">
                         <div class="exploration__entry-aside u__dim">
                             if diff := time.Now().Sub(a.CreatedAt); diff < time.Hour*24*14 {
                                 <p> {fmt.Sprintf("%.0f", diff.Hours() / 24)} days ago </p>
@@ -53,8 +42,8 @@ templ ArticleList(article []entity.ArticleList, topTags []int) {
                                 <p> · In </p>
                                 <a 
                                     href={fmt.Sprintf("/serie/%d", a.Serie.Id)}
-                                    hx-trigger="click consume"
                                     hx-get={fmt.Sprintf("/serie/%d", a.Serie.Id)}
+                                    hx-trigger="click consume"
                                     hx-target="#page"
                                     hx-swap="innerHTML"
                                     hx-replace-url="true"
@@ -63,15 +52,17 @@ templ ArticleList(article []entity.ArticleList, topTags []int) {
                             }
                         </div>
 
-                        <div>
-                            <a 
-                                href={fmt.Sprintf("/article/%d", a.Id)}
-                                class="u__h u__h--4"
-                            > {a.Title} </a>
-                            <div class="cmp__teaser">
-                                <p> {a.Subtitle} </p>
-                            </div>
-                        </div>
+                        <a 
+                            class="u__h--3"
+                            href={fmt.Sprintf("/article/%d", a.Id)}
+                            hx-get={fmt.Sprintf("/article/%d", a.Id)}
+                            hx-trigger="click"
+                            hx-target="#page"
+                            hx-swap="innerHTML"
+                            hx-replace-url="true"
+                            hx-push-url="true"
+                        > {a.Title} </a>
+                        <p> {a.Subtitle} </p>
 
                         if len(a.Tag) > 0 {
                             <section>
