@@ -10,26 +10,16 @@ templ SerieList(serieList []entity.SerieList) {
         </div>
         <div class="cmp__list exploration__entries">
             for idx, sl := range serieList {
-                <a 
-                    href={fmt.Sprintf("/serie/%d", sl.Id)}
-                    hx-trigger="click"
-                    hx-get={fmt.Sprintf("/serie/%d", sl.Id)}
-                    hx-target="#page"
-                >
-                    <div class="lyt__1x2 lyt__1x2--1-3 exploration__entry">
-                        <div class="exploration__entry-detail">
-                            <p class="u__h u__h--4"> {sl.Name} </p>
-                            <p> 
-                                if truncIdx := 169; len(sl.Description) > truncIdx {
-                                    {sl.Description[:truncIdx]}...
-                                }  else {
-                                    {sl.Description}
-                                }
-                            </p>
-                        </div>
-                    </div>
-
-                </a>
+                <div class="exploration__entry">
+                    <a 
+                        class="u__h--3"
+                        href={fmt.Sprintf("/serie/%d", sl.Id)}
+                        hx-get={fmt.Sprintf("/serie/%d", sl.Id)}
+                        hx-trigger="click"
+                        hx-target="#page"
+                    > {sl.Name} </a>
+                    <p> {sl.Description} </p>
+                </div>
 
                 if idx < len(serieList) - 1 {
                     <div class="cmp__list-delimiter"> </div>

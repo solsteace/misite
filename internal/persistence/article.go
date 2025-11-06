@@ -217,7 +217,7 @@ func (p Pg) CountArticleMatchingTags(tagId []int) ([]entity.Tag, []int, error) {
 			tags.name AS "name"
 		FROM tag_count_by_article AS tag_count
 		JOIN tags ON tag_count.id = tags.id
-		ORDER BY tag_count.count DESC`
+		ORDER BY name`
 
 	var rows []struct {
 		Id      int    `db:"id"`

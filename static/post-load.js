@@ -1,3 +1,4 @@
-const themeToggler = document.getElementById("theme-changer")
-
-themeToggler.addEventListener("click", (e) => { ChangeTheme() })
+document.getElementById("site__theme")
+    ?.addEventListener("click", (e) => { 
+        applyTheme() 
+    })

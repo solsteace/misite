@@ -5,7 +5,8 @@ import "github.com/solsteace/misite/internal/component/utility"
 import "fmt"
 
 templ Tags(tags []entity.Tag, count []int, tagType string) {
-    <ul
+    <ul 
+        class="cmp__badge-list tag-badge-list"
         hx-replace-url="true"
         hx-push-url="true"
         hx-target="#page"
@@ -14,14 +15,14 @@ templ Tags(tags []entity.Tag, count []int, tagType string) {
         for idx, t := range tags {
             <li> 
                 <a 
+                    class="tag-badge-list__tag"
                     hx-trigger="click"
                     if tagType == "article" || tagType == "articles" {
                         hx-get={fmt.Sprintf("%s?tagId=%d", utility.ExploreArticleUrl, t.Id)}
                     } else if tagType == "projects" || tagType == "project" {
-                        hx-trigger="click"
                         hx-get={fmt.Sprintf("%s?tagId=%d", utility.ExploreProjectUrl, t.Id)}
                     }
-                > {t.Name} </a> - {count[idx]}
+                > {t.Name} ({count[idx]}) </a> 
             </li>
         }
     </ul>

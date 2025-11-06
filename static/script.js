@@ -1,27 +1,3 @@
-const ATTR_THEME = "siteTheme"
-document.documentElement.dataset[ATTR_THEME] = "light"
-
-// Kudos: https://medium.com/@cerutti.alexander/a-mostly-complete-guide-to-theme-switching-in-css-and-js-c4992d5fd357
-const ChangeTheme = function(theme = null) {
-    let newTheme = theme
-    if(!newTheme) {
-        switch (document.documentElement.dataset[ATTR_THEME]) {
-            case "dark": newTheme = "light"; break;
-            case "light": newTheme = "dark"; break;
-        }
-    }
-    document.documentElement.dataset[ATTR_THEME] = newTheme
-}
-
-const colorSchemePreference = window.matchMedia?.("(prefers-color-scheme:dark)")
-if(colorSchemePreference) {
-    if(colorSchemePreference.matches) {
-        ChangeTheme("dark")
-    }
-
-    colorSchemePreference.addEventListener("change", e => { })
-}
-
 const FindAllArticleHeaders = function(targetElement) {
     const headerTags = ["h2", "h3", "h4", "h5", "h6"]
     const headers = [];
@@ -55,27 +31,75 @@ const MakeOutline = function(articleElemId, outlineElemId) {
         return
     }
 
+    let topMostVisibleEl
+    const visibleEl = {}
+    const observerOpts = {threshold: 1.0}
+    const headers = FindAllArticleHeaders(article)
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            const entryEl = entry.target
+            if(entry.isIntersecting) {
+                visibleEl[entryEl.id] = entryEl.dataset["outlineIdx"]
+                return
+            }
+
+            // When scrolling up, if there's no intersecting header within
+            // viewport, use the previous header of the last top most header
+            if(topMostVisibleEl && Object.keys(visibleEl).length == 1) {
+                const outlineIdx = topMostVisibleEl.dataset["outlineIdx"] 
+                const topMostVisibleElPos = topMostVisibleEl.getBoundingClientRect()
+                if(outlineIdx != "0" && topMostVisibleElPos.y > 0) {
+                    const [_, previousSibling] = headers[outlineIdx - 1]
+                    visibleEl[previousSibling.id] = previousSibling.dataset["outlineIdx"]
+                }
+            }
+            delete visibleEl[entryEl.id]
+        })
+
+        Object.values(visibleEl).forEach(elIdx => {
+            const [_, el] = headers[elIdx]
+            if(!topMostVisibleEl) {
+                topMostVisibleEl = el
+                document
+                    .querySelector(`#outline-item${topMostVisibleEl.dataset["outlineIdx"]}`)
+                    .classList.add("specification__outline--active")
+                return
+            }
+
+            const elPos = el.getBoundingClientRect()
+            const topMostVisibleElPos = topMostVisibleEl.getBoundingClientRect()
+            const shouldUpdate = 
+                !visibleEl[topMostVisibleEl.id] // When top most not within viewport
+                || elPos.y < topMostVisibleElPos.y // if there's another element, choose the upper one
+                || topMostVisibleElPos.y < 0 // when top most left the view port from top direction
+            if(shouldUpdate) {
+                document
+                    .querySelector(`#outline-item${topMostVisibleEl.dataset["outlineIdx"]}`)
+                    .classList.remove("specification__outline--active")
+                topMostVisibleEl = el
+                document
+                    .querySelector(`#outline-item${topMostVisibleEl.dataset["outlineIdx"]}`)
+                    .classList.add("specification__outline--active")
+            }
+        })
+    }, observerOpts)
+
     let currentLevel = 0 // Bypass H1, which usually be the title
     let nextUlEl
     const root = document.createElement("ul")
     const headerStack = [root]
-    const heading = {}
-    FindAllArticleHeaders(article).forEach((header, _) => {
-        // Generate id
+    headers.forEach((header, idx) => {
         const [level, hEl] = header
-        const headingText = hEl.innerHTML.toLowerCase().replaceAll(" ", "-")
-        if(!heading[headingText]) {
-            heading[headingText] = 0
-        }
-        heading[headingText] += 1
+        observer.observe(hEl)
 
-        // Create current entry
+        const headingText = hEl.innerHTML.toLowerCase().replaceAll(" ", "-")
         const liEl = document.createElement("li")
         const aEl = document.createElement("a")
-        const hId = `${headingText}-${heading[headingText]}`
         aEl.innerHTML = hEl.innerHTML
-        aEl.href= `#${hId}`
-        hEl.id = hId
+        aEl.id = `outline-item${idx}`
+        aEl.href= `#${headingText}-${idx}`
+        hEl.id = `${headingText}-${idx}`
+        hEl.dataset["outlineIdx"] = idx
         liEl.appendChild(aEl)
 
         if(level > currentLevel) {
@@ -93,6 +117,35 @@ const MakeOutline = function(articleElemId, outlineElemId) {
         headerStack.at(-1).appendChild(liEl)
         currentLevel = level
     })
-
     outline.appendChild(root)
 }
+
+// Kudos: https://medium.com/@cerutti.alexander/a-mostly-complete-guide-to-theme-switching-in-css-and-js-c4992d5fd357
+const applyTheme = function(theme = null) {
+    const ATTR_THEME = "siteTheme"
+    let newTheme = theme
+    if(!theme) {
+        switch (document.documentElement.dataset[ATTR_THEME]) {
+            case "dark": newTheme = "light"; break;
+            case "light": newTheme = "dark"; break;
+            default: newTheme = "dark";
+        }
+    }
+    localStorage.setItem("colorscheme", newTheme)
+    document.documentElement.dataset[ATTR_THEME] = newTheme
+}
+
+const colorschemePreference = window.matchMedia?.("(prefers-color-scheme:dark)")
+const setTheme = function(ignoreLocalStorage = false) {
+    if(!ignoreLocalStorage) {
+        applyTheme(localStorage.getItem("colorscheme"))
+    } else if(colorschemePreference) {
+        let theme = colorschemePreference.matches? "dark": "light"
+        applyTheme(theme)
+    }
+}
+
+setTheme()
+colorschemePreference.addEventListener("change", e => {
+    setTheme(true)
+})

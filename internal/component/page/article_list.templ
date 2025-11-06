@@ -29,17 +29,19 @@ templ ArticleList(article []entity.ArticleList, topTags []int) {
             for idx, a := range article {
                 <div>
                     <div class="exploration__entry">
-                        <div class="exploration__entry-aside u__dim">
-                            if diff := time.Now().Sub(a.CreatedAt); diff < time.Hour*24*14 {
-                                <p> {fmt.Sprintf("%.0f", diff.Hours() / 24)} days ago </p>
-                            } else if diff < time.Hour*24*365{
-                                <p> {a.CreatedAt.Format("Jan 02")} </p>
-                            } else {
-                                <p> {a.CreatedAt.Format("Jan 02, 2006")}</p>
-                            }
+                        <div class="exploration__entry-aside">
+                            <p class="u__dim">
+                                if diff := time.Now().Sub(a.CreatedAt); diff < time.Hour*24*14 {
+                                    {fmt.Sprintf("%.0f", diff.Hours() / 24)} days ago
+                                } else if diff < time.Hour*24*365{
+                                    {a.CreatedAt.Format("Jan 02")}
+                                } else {
+                                    {a.CreatedAt.Format("Jan 02, 2006")}
+                                }
+                            </p>
 
                             if a.Serie != nil {
-                                <p> · In </p>
+                                <p class="u__dim"> · In </p>
                                 <a 
                                     href={fmt.Sprintf("/serie/%d", a.Serie.Id)}
                                     hx-get={fmt.Sprintf("/serie/%d", a.Serie.Id)}

@@ -235,7 +235,7 @@ func (p Pg) CountProjectMatchingTags(tagId []int) ([]entity.Tag, []int, error) {
 			tags.name AS "name"
 		FROM tag_count_by_project AS tag_count
 		JOIN tags ON tag_count.id = tags.id
-		ORDER BY tag_count.count DESC`
+		ORDER BY name`
 	args := []any{tagId}
 
 	var rows []struct {

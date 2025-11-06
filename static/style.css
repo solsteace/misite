@@ -4,18 +4,33 @@ VARS + BASIC ELEM OVERRIDE
 :root[data-site-theme="light"] {
     --bg-color: white;
     --primary-color: black;
+    --primary-color-sw1: rgb(39, 39, 39);
     --accent-color: grey;
+
+    /* ICON NEEDS
+    The values below are based on 16x16 "grid" 
+
+    btw, Multiline value broke the CSS highlighter :/
+    https://github.com/microsoft/vscode-css/pull/30 */
+    --icon-theme-d: path( "M 8,0 \ Q 16,0 16,8 \ Q 16,16 8,16 \ Q 0,16 0,8 \ Q 0,0 8,0");
 
 }
 :root[data-site-theme="dark"] {
-    --bg-color: black;
-    --primary-color: white;
-    --secondary-color: grey;
+    --bg-color: rgb(0, 2, 17);
+    --primary-color: rgb(223, 235, 248);
+    --primary-color-sw1: rgb(154, 171, 223);
+    --secondary-color: rgb(255, 220, 143);
 
     --theme-button-transform: translate(100%);
+
+    /* ICON NEEDS
+    The values below are based on 16x16 "grid" 
+
+    btw, Multiline value broke the CSS highlighter :/
+    https://github.com/microsoft/vscode-css/pull/30 */
+    --icon-theme-d: path( "M 8,0 \ Q 8,8 16,8 \ Q 8,8 8,16 \ Q 8,8 0,8 \ Q 8,8 8,0");
 }
 :root {
-    color: var(--primary-color);
     background-color: var(--bg-color);
     padding: 0px clamp(40px, 8%, 140px);
 
@@ -24,25 +39,43 @@ VARS + BASIC ELEM OVERRIDE
     --gap-small: 8px;
     --gap-medium: 16px;
     --gap-large: 28px;
+
+    /* ICON NEEDS
+    The values below are based on 16x16 "grid" 
+
+    btw, Multiline value broke the CSS highlighter :/
+    https://github.com/microsoft/vscode-css/pull/30 */
+    --icon-g-stroke: var(--primary-color);
 }
 body {
     position: relative;
     height: fit-content;
 }
-* {
+*, *::after, *::before {
+    color: var(--primary-color-sw1);
     margin: 0px;
     padding: 0px;
     font-size: 1rem;
-    font-family: system-ui;
+    font-family: "lexend", system-ui;
     box-sizing: border-box;
     scroll-behavior: smooth;
+    transition: all 0.5s;
 }
 ul {
     list-style-type: none;
 }
 a {
     text-decoration: none;
-    color: var(--primary-color);
+}
+a:hover {
+    cursor:pointer;
+}
+p {
+    color: var(--primary-color-sw1);
+}
+button {
+    border: 0px solid black;
+    background: var(--col-transparent);
 }
 
 /* ====================
@@ -133,24 +166,6 @@ a {
 
 
 
-.cmp__teaser {
-    position: relative;
-    overflow: clip;
-}
-.cmp__teaser > *:last-child::after {
-    display: block;
-    content: "";
-    position: absolute;
-    height: inherit;
-    inset: 0;
-    background: linear-gradient(
-        to bottom, 
-        var(--col-transparent), 
-        var(--bg-color)); /* Go complete <color> at <percentage> portion of element from starting point */
-}
-
-
-
 /* ====================
     Utilities (u)
 ==================== */
@@ -160,6 +175,7 @@ h3, .u__h--3,
 h4, .u__h--4,
 h5, .u__h--5,
 h6, .u__h--6 {
+    color: var(--primary-color);
     font-weight: bold;
 }
 h1, .u__h--1 {
@@ -172,15 +188,15 @@ h3, .u__h--3 {
     font-size: 1.5rem;
 }
 h4, .u__h--4,
-h5, .u__h--5,
-h6, .u__h--6 {
+h5, .u__h--5 {
     font-size: 1.25rem;
 }
 
 
 
-.u__dim {
-    filter: opacity(80%);
+.u__dim { opacity: 75%; }
+.u__active-on-hover:hover {
+    color: var(--secondary-color);
 }
 
 
@@ -196,7 +212,7 @@ h6, .u__h--6 {
 .exploration__entries {
     display: flex;
     flex-direction: column;
-    gap: var(--gap-medium)
+    gap: var(--gap-small)
 }
 .exploration__entry {
     display: flex;
@@ -218,15 +234,15 @@ h6, .u__h--6 {
 .specification {
     display: flex;
     flex-direction: row-reverse;
-    gap: var(--gap-large);
+    gap: calc(2 * var(--gap-large));
 }
 .specification__content-header {
     display: flex;
     flex-direction: column;
-    gap: var(--gap-tiny);
+    gap: var(--gap-small);
 }
 .specification__outline {
-    top: var(--gap-medium);
+    top: calc(3* var(--gap-large));
     width: 100%;
 }
 .specification__outline > ul {
@@ -249,23 +265,28 @@ h6, .u__h--6 {
     gap: var(--gap-small);
 }
 .specification__outline a {
+    opacity: 70%;
     line-height: 1.1rem;
     font-size: inherit;
 }
-.specification__outline
+.specification__outline a:hover {
+    opacity: 100%;
+    color: var(--primary-color)
+}
+.specification__outline .specification__outline--active {
+    opacity: 100%;
+    color: var(--secondary-color);
+}
+.specification__outline,
 .specification__content,
-.specification__content > *:last-child,
-.specification__content > *:last-child * {
+.specification__content > *:nth-child(n+2) {
     display: flex;
     flex-direction: column;
 }
 .specification__content {
-    display: flex;
-    flex-direction: column;
     gap: var(--gap-large);
 }
-.specification__content > *:last-child,
-.specification__content > *:last-child * {
+.specification__content > *:nth-child(n+2){
     gap: var(--gap-medium);
 }
 .specification__extras {
@@ -283,17 +304,16 @@ h6, .u__h--6 {
 
 .tag-badge-list__tag {
     padding: 2px 4px;
-    border: 1px solid var(--primary-color);
+    border: 1px solid var(--primary-color-sw1);
     background: var(--bg-color);
-    filter: none;
-
-    transition: filter 0.25s;
+    transition: all 0.25s;
 }
 .tag-badge-list__tag:hover {
-    border: 1px solid var(--bg-color);
-    transition: filter 0.25s;
+    border: 1px solid var(--secondary-color);
+    background: var(--secondary-color);
+    color: var(--bg-color);
+    transition: all 0.25s;
     cursor: pointer;
-    filter: invert(100%);
 }
 .tag-badge-list__tag {
     font-size: 0.75rem;
@@ -338,61 +358,94 @@ h6, .u__h--6 {
 
 
 .site__topbar {
+    z-index: 10000;
+    position: sticky;
+    top: 0;
+    left: 0;
+    padding: var(--gap-medium) 0px;
     justify-content: space-between;
     align-items: center;
     display: flex;
+    background: var(--bg-color);
 }
 .site__content {
-    padding: 28px 0;
+    padding: 28px 0px;
 }
 .site__nav {
     display: flex;
-    gap: var(--gap-medium);
+    align-items: center;
+    gap: var(--gap-large);
     list-style-type: none;
 }
-.site__nav > li {
-    padding: var(--gap-small) 0px;
+.site__nav > li > a {
+    color: var(--primary-color);
 }
 .site__nav > li > a:hover {
-    font-weight: bold;
-    text-decoration: underline;
-    cursor:pointer;
+    color: var(--secondary-color);
 }
 .site__extra {
     display: flex;
-    flex-direction: row;
+    align-items: center;
     gap: var(--gap-medium);
 }
 .site__theme {
-    border: 1px solid var(--primary-color);
-    width: 40px;
-}
-.site__theme > button {
-    cursor: pointer;
-    width: 50%;
-    height: 100%;
-    transform: var(--theme-button-transform);
-    transition: transform 0.5s;
-}
-
-
-
-.articles__tags > ul,
-.projects__tags > ul {
     display: flex;
     flex-direction: column;
-    gap: var(--gap-tiny);
-    list-style-type: none;
-
+    justify-content: center;
 }
-
-
-
-.projects__tags > ul > li > a:hover,
-.articles__tags > ul > li > a:hover {
-    text-decoration: underline;
+.site__theme-icon {
+    background: var(--col-transparent);
+    height: 24px;
+    aspect-ratio: 1/1;
+    overflow: visible;
+}
+.site__theme-icon:hover {
     cursor: pointer;
 }
+.site__theme-icon > path {
+    transition: d 0.5s;
+    d: var(--icon-theme-d);
+    fill: var(--col-transparent);
+    stroke: var(--icon-g-stroke);
+    stroke-width: 0.0875rem;
+}
+
+
+
+.home__art {
+    height: 240px;
+}
+.home__art > line {
+    stroke: rgb(from var(--primary-color-sw1) r g b / 80%);
+    stroke-linecap:square;
+    stroke-dasharray: calc(100% + 1px);
+    stroke-dashoffset: 100%;
+}
+.home__art > line:nth-child(3n) {
+    animation: 
+        art__intro--1 1.5s forwards ease-out,
+        art__intro--2 1.5s forwards;
+}
+.home__art > line:nth-child(3n + 2) {
+    animation: 
+        art__intro--1 1.5s forwards ease-out 0.1s,
+        art__intro--2 1.5s forwards;
+}
+.home__art > line:nth-child(3n + 1) {
+    animation: 
+        art__intro--1 1.5s forwards ease-out 0.2s,
+        art__intro--2 1.5s forwards;
+}
+
+@keyframes art__intro--1 {
+    0% { stroke-dashoffset: 100%; }
+    100% { stroke-dashoffset: 0%; }
+}
+@keyframes art__intro--2 {
+    0% { stroke-width: 0px; }
+    100% { stroke-width: 5px; }
+}
+
 
 
 
@@ -402,4 +455,11 @@ h6, .u__h--6 {
     display: flex;
     gap: var(--gap-tiny);
     flex-wrap: wrap;
+}
+
+.specification__extra > a:hover,
+.exploration__entry > a:hover,
+.exploration__entry-aside > a:hover,
+.specification__aside > a:hover{
+    color: var(--secondary-color);
 }

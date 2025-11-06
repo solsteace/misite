@@ -37,11 +37,10 @@ templ ProjectList(project []entity.ProjectList, topTags []int) {
         <div class="cmp__list exploration__entries" > 
             for idx, p := range project {
                 <div class="exploration__entry" >
-                    <div class="exploration__entry-aside u__dim">
+                    <div class="exploration__entry-aside">
                         if p.Serie != nil {
-                            <p> Featured in </p>
+                            <p class="u__dim"> Featured in </p>
                             <a 
-                                class="articles-entry__serie-link"
                                 href={fmt.Sprintf("/serie/%d", p.Serie.Id)}
                                 hx-get={fmt.Sprintf("/serie/%d", p.Serie.Id)}
                                 hx-trigger="click consume"

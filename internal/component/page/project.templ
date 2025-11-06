@@ -20,7 +20,7 @@ templ Project(project entity.Project) {
         <div class="specification__extras">
             <nav class="specification__extra">
                 if len(project.Link) > 0 {
-                    <b class="u__h--4"> Links </b>
+                    <b class="u__h--6"> Links </b>
                     for _, l := range project.Link {
                         <a href={l.Url}> {l.DisplayText} </a>
                     }
@@ -32,16 +32,16 @@ templ Project(project entity.Project) {
                     class="cmp__sticky-elem specification__extra specification__outline"
                     id={fmt.Sprintf("outline-%s", newProjectHTMLIdentifier())}
                 > 
-                    <b class="u__h--4"> Outline </b>
+                    <b class="u__h--6"> Outline </b>
                 </nav>
             </div>
         </div>
 
         <article id={newProjectHTMLIdentifier()} class="specification__content">
             <header class="specification__content-header">
-                <div class="specification__aside u__dim"> 
+                <div class="specification__aside"> 
                     if project.Serie != nil {
-                        <p> Featured in </p>
+                        <p class="u__dim"> Featured in </p>
                         <a
                             href={fmt.Sprintf("/serie/%d", project.Serie.Id)}
                             hx-get={fmt.Sprintf("/serie/%d", project.Serie.Id)}
@@ -54,31 +54,25 @@ templ Project(project entity.Project) {
                     }
                 </div>
 
-                <div>
-                    <h1> {project.Name} </h1>
-                    <p> {project.Synopsis} </p>
-                </div>
+                <h1> {project.Name} </h1>
+                <p> {project.Synopsis} </p>
 
-                <div>
-                    <ul class="cmp__badge-list tag-badge-list">
-                        for _, t := range project.Tag {
-                            <li> 
-                                <a
-                                    class="tag-badge-list__tag"
-                                    hx-trigger="click consume"
-                                    hx-target="#page"
-                                    hx-get={fmt.Sprintf("%s?tagId=%d", utility.ExploreProjectUrl, t.Id)}
-                                    href= {fmt.Sprintf("%s?tagId=%d", utility.ExploreProjectUrl, t.Id)} 
-                                > {t.Name} </a> 
-                            </li>
-                        }
-                    </ul>
-                </div>
+                <ul class="cmp__badge-list tag-badge-list">
+                    for _, t := range project.Tag {
+                        <li> 
+                            <a
+                                class="tag-badge-list__tag"
+                                hx-trigger="click consume"
+                                hx-target="#page"
+                                hx-get={fmt.Sprintf("%s?tagId=%d", utility.ExploreProjectUrl, t.Id)}
+                                href= {fmt.Sprintf("%s?tagId=%d", utility.ExploreProjectUrl, t.Id)} 
+                            > {t.Name} </a> 
+                        </li>
+                    }
+                </ul>
             </header>
 
-            <div>
-                @templ.Raw(project.Description)
-            </div>
+            @templ.Raw(project.Description)
         </article>
         @onProject()
     </div>

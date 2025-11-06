@@ -1,9 +1,16 @@
 package component
 
 templ Base(alpinejsUrl, htmxUrl string) {
+    <!DOCTYPE html>
     <html>
         <head>
             <link rel="stylesheet" href="/static/style.css" />
+            
+            // Noice fonts: Roboto, Lexend
+            <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+
             <script src="/static/script.js"></script>
             <script defer src={alpinejsUrl}></script>
             <script src={htmxUrl}></script>
@@ -20,41 +27,45 @@ templ Base(alpinejsUrl, htmxUrl string) {
                     <ul class="site__nav">
                         <li>
                             <a
-                                hx-trigger="click"
+                                href="/home"
                                 hx-get="/home"
+                                hx-trigger="click"
                             > Home </a>
                         </li>
                         <li>
                             <a
-                                hx-trigger="click"
+                                href="/projects"
                                 hx-get="/projects"
+                                hx-trigger="click"
                             > Projects </a>
                         </li>
                         <li>
                             <a
-                                hx-trigger="click"
+                                href="/articles"
                                 hx-get="/articles"
+                                hx-trigger="click"
                             > Articles </a>
                         </li>
                         <li>
                             <a
-                                hx-trigger="click"
+                                href="/series"
                                 hx-get="/series"
+                                hx-trigger="click"
                             > Series </a>
                         </li>
                     </ul>
                 </nav>
 
                 <div class="site__extra">
-                    <div class="site__theme">
-                        <button 
-                            type="button"
-                            id="theme-changer" 
-                            style="color: var(--test-color)"
-                        > </button>
-                    </div>
-                    <button>
-                        <a href="https://github.com/solsteace/misite/"> Source </a>
+                    <button 
+                        id="site__theme"
+                        class="site__theme" 
+                        type="button" > 
+                        <svg
+                            class="site__theme-icon"
+                            viewBox="0 0 16 16" 
+                            xmlns="http://www.w3.org/2000/svg" 
+                        > <path /> </svg>
                     </button>
                 </div>
             </div>

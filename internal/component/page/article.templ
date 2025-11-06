@@ -28,24 +28,26 @@ templ Article(article entity.Article) {
                 <nav class="cmp__sticky-elem specification__extra specification__outline"
                     id={fmt.Sprintf("outline-%s", newArticleHTMLIdentifier())} 
                 >
-                    <b class="u__h--4"> Outline </b>
+                    <b class="u__h--6"> Outline </b>
                 </nav>
             </div>
         </div>
 
         <article id={newArticleHTMLIdentifier()} class="specification__content">
             <header class="specification__content-header">
-                <div class="specification__aside u__dim">
-                    if diff := time.Now().Sub(article.CreatedAt); diff < time.Hour*24*14 {
-                        <p> {fmt.Sprintf("%.0f", diff.Hours() / 24)} days ago </p>
-                    } else if diff < time.Hour*24*365{
-                        <p> {article.CreatedAt.Format("Jan 02")} </p>
-                    } else {
-                        <p> {article.CreatedAt.Format("Jan 02, 2006")}</p>
-                    }
+                <div class="specification__aside">
+                    <p class="u__dim">
+                        if diff := time.Now().Sub(article.CreatedAt); diff < time.Hour*24*14 {
+                            {fmt.Sprintf("%.0f", diff.Hours() / 24)} days ago
+                        } else if diff < time.Hour*24*365{
+                            {article.CreatedAt.Format("Jan 02")}
+                        } else {
+                            {article.CreatedAt.Format("Jan 02, 2006")}
+                        }
+                    </p>
 
                     if article.Serie != nil {
-                        <p> · In </p>
+                        <p class="u__dim"> · In </p>
                         <a 
                             href={fmt.Sprintf("/serie/%d", article.Serie.Id)}
                             hx-get={fmt.Sprintf("/serie/%d", article.Serie.Id)}
@@ -59,33 +61,27 @@ templ Article(article entity.Article) {
                     }
                 </div>
 
-                <div>
-                    <h1> {article.Title} </h1>
-                    <p> {article.Subtitle} </p>
-                </div>
+                <h1> {article.Title} </h1>
+                <p> {article.Subtitle} </p>
 
-                <div>
-                    <ul class="cmp__badge-list tag-badge-list">
-                        for _, t := range article.Tag {
-                            <li> 
-                                <a
-                                    class="tag-badge-list__tag"
-                                    href= {fmt.Sprintf("%s?tagId=%d", utility.ExploreArticleUrl, t.Id)} 
-                                    hx-get={fmt.Sprintf("%s?tagId=%d", utility.ExploreArticleUrl, t.Id)}
-                                    hx-trigger="click consume"
-                                    hx-target="#page"
-                                    hx-push-url="true"
-                                    hx-replace-url="true"
-                                > {t.Name} </a> 
-                            </li>
-                        }
-                    </ul>
-                </div>
+                <ul class="cmp__badge-list tag-badge-list">
+                    for _, t := range article.Tag {
+                        <li> 
+                            <a
+                                class="tag-badge-list__tag"
+                                href= {fmt.Sprintf("%s?tagId=%d", utility.ExploreArticleUrl, t.Id)} 
+                                hx-get={fmt.Sprintf("%s?tagId=%d", utility.ExploreArticleUrl, t.Id)}
+                                hx-trigger="click consume"
+                                hx-target="#page"
+                                hx-push-url="true"
+                                hx-replace-url="true"
+                            > {t.Name} </a> 
+                        </li>
+                    }
+                </ul>
             </header>
 
-            <div>
-                @templ.Raw(article.Content)
-            </div>
+            @templ.Raw(article.Content)
         </article>
 
         @onArticle()
