@@ -1,4 +1,4 @@
-const FindAllArticleHeaders = function(targetElement) {
+const findArticleHeaders = function(targetElement) {
     const headerTags = ["h2", "h3", "h4", "h5", "h6"]
     const headers = [];
     targetElement.childNodes.forEach((child) => {
@@ -12,14 +12,14 @@ const FindAllArticleHeaders = function(targetElement) {
         }
 
         if(child.childNodes.length > 0 && !isHeader) {
-            headers.push(...FindAllArticleHeaders(child))
+            headers.push(...findArticleHeaders(child))
             return
         }
     })
     return headers
 }
 
-const MakeOutline = function(articleElemId, outlineElemId) {
+const makeArticleOutline = function(articleElemId, outlineElemId) {
     const article = document.getElementById(articleElemId)
     const outline = document.getElementById(outlineElemId)
 
@@ -34,7 +34,7 @@ const MakeOutline = function(articleElemId, outlineElemId) {
     let topMostVisibleEl
     const visibleEl = {}
     const observerOpts = {threshold: 1.0}
-    const headers = FindAllArticleHeaders(article)
+    const headers = findArticleHeaders(article)
     const observer = new IntersectionObserver(entries => {
         entries.forEach(entry => {
             const entryEl = entry.target
@@ -117,7 +117,7 @@ const MakeOutline = function(articleElemId, outlineElemId) {
         headerStack.at(-1).appendChild(liEl)
         currentLevel = level
     })
-    outline.appendChild(root)
+    outline.replaceChildren(root)
 }
 
 // Kudos: https://medium.com/@cerutti.alexander/a-mostly-complete-guide-to-theme-switching-in-css-and-js-c4992d5fd357

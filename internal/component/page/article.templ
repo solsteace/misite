@@ -11,7 +11,7 @@ func newArticleHTMLIdentifier() string {
 }
 
 func makeOutlineExpr(articleElemId, targetElem string) string {
-    return fmt.Sprintf("MakeOutline('%s', '%s')", articleElemId, targetElem)
+    return fmt.Sprintf("makeArticleOutline('%s', '%s')", articleElemId, targetElem)
 }
 
 templ onArticle() {

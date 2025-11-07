@@ -8,10 +8,10 @@ templ Base(alpinejsUrl, htmxUrl string) {
             
             // Noice fonts: Roboto, Lexend
             <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+            <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 
-            <script src="/static/script.js"></script>
+            <script src="/static/pre.js"></script>
             <script defer src={alpinejsUrl}></script>
             <script src={htmxUrl}></script>
         </head>
@@ -75,6 +75,6 @@ templ Base(alpinejsUrl, htmxUrl string) {
             </div>
         </body>
 
-        <script src="/static/post-load.js"></script>
+        <script src="/static/post.js"></script>
     </html>
 }
