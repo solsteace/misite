@@ -39,7 +39,6 @@ go.work.sum
 tmp/
 
 # Static files
-static/index.html
 static/vendor/**
 !static/vendor/.gitkeep
 
