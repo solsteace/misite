@@ -25,7 +25,7 @@ templ ProjectList(project []entity.ProjectList, topTags []int) {
                     class="projects__tags"
                     hx-get={fmt.Sprintf(
                         "/tags?by=project&%s", 
-                        strings.Join(mapIntToString(topTags, "tagId="), "&"))}
+                        strings.Join(mapIntToString(topTags, "tId="), "&"))}
                     hx-trigger="load"
                     hx-replace-url="false"
                     hx-push-url="false"
@@ -73,8 +73,8 @@ templ ProjectList(project []entity.ProjectList, topTags []int) {
                                             class="cmp__badge-list tag-badge-list__tag"
                                             hx-trigger="click consume"
                                             hx-target="#page"
-                                            hx-get={fmt.Sprintf("%s?tagId=%d", utility.ExploreProjectUrl, t.Id)}
-                                            href= {fmt.Sprintf("%s?tagId=%d", utility.ExploreProjectUrl, t.Id)} 
+                                            hx-get={fmt.Sprintf("%s?tId=%d", utility.ExploreProjectUrl, t.Id)}
+                                            href= {fmt.Sprintf("%s?tId=%d", utility.ExploreProjectUrl, t.Id)} 
                                         >
                                             {t.Name}
                                         </a> 

@@ -94,7 +94,7 @@ func (c Controller) Articles(w http.ResponseWriter, r *http.Request) error {
 		}
 		param.Limit = int(nLimit)
 	}
-	for _, id := range urlQuery["tagId"] {
+	for _, id := range urlQuery["tId"] {
 		if id == "" {
 			continue
 		}
@@ -106,7 +106,7 @@ func (c Controller) Articles(w http.ResponseWriter, r *http.Request) error {
 			param.TagId = append(param.TagId, int(nId))
 		}
 	}
-	for _, id := range urlQuery["serieId"] {
+	for _, id := range urlQuery["sId"] {
 		if id == "" {
 			continue
 		}
@@ -172,7 +172,7 @@ func (c Controller) Projects(w http.ResponseWriter, r *http.Request) error {
 		}
 		param.Limit = int(nLimit)
 	}
-	for _, id := range urlQuery["tagId"] {
+	for _, id := range urlQuery["tId"] {
 		if id == "" {
 			continue
 		}
@@ -222,7 +222,7 @@ func (c Controller) Tags(w http.ResponseWriter, r *http.Request) error {
 	urlQuery := r.URL.Query()
 
 	var tagIds []int
-	for _, id := range urlQuery["tagId"] {
+	for _, id := range urlQuery["tId"] {
 		if id == "" {
 			continue
 		}

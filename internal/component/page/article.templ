@@ -69,8 +69,8 @@ templ Article(article entity.Article) {
                         <li> 
                             <a
                                 class="tag-badge-list__tag"
-                                href= {fmt.Sprintf("%s?tagId=%d", utility.ExploreArticleUrl, t.Id)} 
-                                hx-get={fmt.Sprintf("%s?tagId=%d", utility.ExploreArticleUrl, t.Id)}
+                                href= {fmt.Sprintf("%s?tId=%d", utility.ExploreArticleUrl, t.Id)} 
+                                hx-get={fmt.Sprintf("%s?tId=%d", utility.ExploreArticleUrl, t.Id)}
                                 hx-trigger="click consume"
                                 hx-target="#page"
                                 hx-push-url="true"

@@ -64,8 +64,8 @@ templ Project(project entity.Project) {
                                 class="tag-badge-list__tag"
                                 hx-trigger="click consume"
                                 hx-target="#page"
-                                hx-get={fmt.Sprintf("%s?tagId=%d", utility.ExploreProjectUrl, t.Id)}
-                                href= {fmt.Sprintf("%s?tagId=%d", utility.ExploreProjectUrl, t.Id)} 
+                                hx-get={fmt.Sprintf("%s?tId=%d", utility.ExploreProjectUrl, t.Id)}
+                                href= {fmt.Sprintf("%s?tId=%d", utility.ExploreProjectUrl, t.Id)} 
                             > {t.Name} </a> 
                         </li>
                     }

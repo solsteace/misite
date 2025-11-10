@@ -18,9 +18,9 @@ templ Tags(tags []entity.Tag, count []int, tagType string) {
                     class="tag-badge-list__tag"
                     hx-trigger="click"
                     if tagType == "article" || tagType == "articles" {
-                        hx-get={fmt.Sprintf("%s?tagId=%d", utility.ExploreArticleUrl, t.Id)}
+                        hx-get={fmt.Sprintf("%s?tId=%d", utility.ExploreArticleUrl, t.Id)}
                     } else if tagType == "projects" || tagType == "project" {
-                        hx-get={fmt.Sprintf("%s?tagId=%d", utility.ExploreProjectUrl, t.Id)}
+                        hx-get={fmt.Sprintf("%s?tId=%d", utility.ExploreProjectUrl, t.Id)}
                     }
                 > {t.Name} ({count[idx]}) </a> 
             </li>

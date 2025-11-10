@@ -16,7 +16,7 @@ templ ArticleList(article []entity.ArticleList, topTags []int) {
                     class="articles__tags"
                     hx-get={fmt.Sprintf(
                         "/tags?by=article&%s", 
-                        strings.Join(mapIntToString(topTags, "tagId="), "&"))}
+                        strings.Join(mapIntToString(topTags, "tId="), "&"))}
                     hx-trigger="load"
                     hx-replace-url="false"
                     hx-push-url="false"
@@ -75,8 +75,8 @@ templ ArticleList(article []entity.ArticleList, topTags []int) {
                                                 class="tag-badge-list__tag"
                                                 hx-trigger="click consume"
                                                 hx-target="#page"
-                                                hx-get={fmt.Sprintf("%s?tagId=%d", utility.ExploreArticleUrl, t.Id)}
-                                                href= {fmt.Sprintf("%s?tagId=%d", utility.ExploreArticleUrl, t.Id)} 
+                                                hx-get={fmt.Sprintf("%s?tId=%d", utility.ExploreArticleUrl, t.Id)}
+                                                href= {fmt.Sprintf("%s?tId=%d", utility.ExploreArticleUrl, t.Id)} 
                                             >
                                                 {t.Name}
                                             </a> 
