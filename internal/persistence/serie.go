@@ -72,15 +72,12 @@ func (p Pg) Serie(id int) (entity.Serie2, error) {
 			Id        sql.Null[int]       `db:"id"`
 			Title     sql.Null[string]    `db:"title"`
 			Synopsis  sql.Null[string]    `db:"synopsis"`
-			Thumbnail sql.Null[string]    `db:"thumbnail"`
-			Order     sql.Null[int]       `db:"order"`
 			CreatedAt sql.Null[time.Time] `db:"created_at"`
 		}
 		Project struct {
-			Id        sql.Null[int]    `db:"id"`
-			Name      sql.Null[string] `db:"name"`
-			Synopsis  sql.Null[string] `db:"synopsis"`
-			Thumbnail sql.Null[string] `db:"thumbnail"`
+			Id       sql.Null[int]    `db:"id"`
+			Name     sql.Null[string] `db:"name"`
+			Synopsis sql.Null[string] `db:"synopsis"`
 		}
 	}
 	query := `
@@ -92,12 +89,9 @@ func (p Pg) Serie(id int) (entity.Serie2, error) {
 			articles.id AS "article.id",
 			articles.title AS "article.title",
 			articles.subtitle AS "article.synopsis",
-			articles.thumbnail AS "article.thumbnail",
 			articles.created_at AS "article.created_at",
-			articles.serie_order AS "article.order",
 			projects.id AS "project.id",
 			projects.name AS "project.name",
-			projects.thumbnail AS "project.thumbnail",
 			projects.synopsis AS "project.synopsis"
 		FROM series
 		LEFT JOIN projects ON projects.devblog_serie = series.id
@@ -129,15 +123,11 @@ func (p Pg) Serie(id int) (entity.Serie2, error) {
 						Id        int
 						Title     string
 						Synopsis  string
-						Thumbnail string
-						Order     int
 						CreatedAt time.Time
 					}{
 						article.Id.V,
 						article.Title.V,
 						article.Synopsis.V,
-						article.Thumbnail.V,
-						article.Order.V,
 						article.CreatedAt.V})
 			}
 		}
@@ -146,14 +136,12 @@ func (p Pg) Serie(id int) (entity.Serie2, error) {
 			if _, ok := insertedProjects[project.Id.V]; !ok {
 				insertedProjects[project.Id.V] = struct{}{}
 				serie.Project = append(serie.Project, struct {
-					Id        int
-					Name      string
-					Thumbnail string
-					Synopsis  string
+					Id       int
+					Name     string
+					Synopsis string
 				}{
 					project.Id.V,
 					project.Name.V,
-					project.Thumbnail.V,
 					project.Synopsis.V})
 			}
 		}

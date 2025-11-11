@@ -2,7 +2,6 @@ package page
 
 import "github.com/solsteace/misite/internal/entity"
 import "fmt"
-import "time"
 import "strings"
 import "github.com/solsteace/misite/internal/component/utility"
 
@@ -29,31 +28,6 @@ templ ArticleList(article []entity.ArticleList, topTags []int) {
             for idx, a := range article {
                 <div>
                     <div class="exploration__entry">
-                        <div class="exploration__entry-aside">
-                            <p class="u__dim">
-                                if diff := time.Now().Sub(a.CreatedAt); diff < time.Hour*24*14 {
-                                    {fmt.Sprintf("%.0f", diff.Hours() / 24)} days ago
-                                } else if diff < time.Hour*24*365{
-                                    {a.CreatedAt.Format("Jan 02")}
-                                } else {
-                                    {a.CreatedAt.Format("Jan 02, 2006")}
-                                }
-                            </p>
-
-                            if a.Serie != nil {
-                                <p class="u__dim"> · In </p>
-                                <a 
-                                    href={fmt.Sprintf("/serie/%d", a.Serie.Id)}
-                                    hx-get={fmt.Sprintf("/serie/%d", a.Serie.Id)}
-                                    hx-trigger="click consume"
-                                    hx-target="#page"
-                                    hx-swap="innerHTML"
-                                    hx-replace-url="true"
-                                    hx-push-url="true"
-                                > {a.Serie.Name} </a> 
-                            }
-                        </div>
-
                         <a 
                             class="u__h--3"
                             href={fmt.Sprintf("/article/%d", a.Id)}
@@ -66,25 +40,37 @@ templ ArticleList(article []entity.ArticleList, topTags []int) {
                         > {a.Title} </a>
                         <p> {a.Subtitle} </p>
 
-                        if len(a.Tag) > 0 {
-                            <section>
-                                <ul class="cmp__badge-list tag-badge-list">
-                                    for _, t := range a.Tag {
-                                        <li> 
-                                            <a
-                                                class="tag-badge-list__tag"
-                                                hx-trigger="click consume"
-                                                hx-target="#page"
-                                                hx-get={fmt.Sprintf("%s?tId=%d", utility.ExploreArticleUrl, t.Id)}
-                                                href= {fmt.Sprintf("%s?tId=%d", utility.ExploreArticleUrl, t.Id)} 
-                                            >
-                                                {t.Name}
-                                            </a> 
-                                        </li>
-                                    }
-                                </ul>
-                            </section>
-                        }
+                        <ul class="cmp__badge-list tag-badge-list">
+                            if a.Serie != nil {
+                                <li>
+                                    <a 
+                                        class="tag-badge-list__tag tag-badge-list__tag--special"
+                                        href={fmt.Sprintf("/serie/%d", a.Serie.Id)}
+                                        hx-get={fmt.Sprintf("/serie/%d", a.Serie.Id)}
+                                        hx-trigger="click consume"
+                                        hx-target="#page"
+                                        hx-swap="innerHTML"
+                                        hx-replace-url="true"
+                                        hx-push-url="true"
+                                    > {a.Serie.Name} </a> 
+                                </li>
+                            }
+                            if len(a.Tag) > 0 {
+                                for _, t := range a.Tag {
+                                    <li> 
+                                        <a
+                                            class="tag-badge-list__tag"
+                                            hx-trigger="click consume"
+                                            hx-target="#page"
+                                            hx-get={fmt.Sprintf("%s?tId=%d", utility.ExploreArticleUrl, t.Id)}
+                                            href= {fmt.Sprintf("%s?tId=%d", utility.ExploreArticleUrl, t.Id)} 
+                                        >
+                                            {t.Name}
+                                        </a> 
+                                    </li>
+                                }
+                            }
+                        </ul>
                     </div>
                 </div>
 

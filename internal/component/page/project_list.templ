@@ -37,21 +37,6 @@ templ ProjectList(project []entity.ProjectList, topTags []int) {
         <div class="cmp__list exploration__entries" > 
             for idx, p := range project {
                 <div class="exploration__entry" >
-                    <div class="exploration__entry-aside">
-                        if p.Serie != nil {
-                            <p class="u__dim"> Featured in </p>
-                            <a 
-                                href={fmt.Sprintf("/serie/%d", p.Serie.Id)}
-                                hx-get={fmt.Sprintf("/serie/%d", p.Serie.Id)}
-                                hx-trigger="click consume"
-                                hx-target="#page"
-                                hx-swap="innerHTML"
-                                hx-replace-url="true"
-                                hx-push-url="true"
-                            > {p.Serie.Name} </a> 
-                        }
-                    </div>
-
                     <a 
                         class="u__h--3"
                         href={fmt.Sprintf("/project/%d", p.Id)}
@@ -67,6 +52,20 @@ templ ProjectList(project []entity.ProjectList, topTags []int) {
                     if len(p.Tag) > 0 {
                         <section>
                             <ul class="cmp__badge-list tag-badge-list">
+                                if p.Serie != nil {
+                                    <li>
+                                        <a 
+                                            class="tag-badge-list__tag tag-badge-list__tag--special"
+                                            href={fmt.Sprintf("/serie/%d", p.Serie.Id)}
+                                            hx-get={fmt.Sprintf("/serie/%d", p.Serie.Id)}
+                                            hx-trigger="click consume"
+                                            hx-target="#page"
+                                            hx-swap="innerHTML"
+                                            hx-replace-url="true"
+                                            hx-push-url="true"
+                                        > {p.Serie.Name} </a> 
+                                    </li>
+                                }
                                 for _, t := range p.Tag {
                                     <li> 
                                         <a

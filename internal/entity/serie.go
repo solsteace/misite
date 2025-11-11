@@ -15,17 +15,14 @@ type Serie2 struct {
 		Id        int
 		Title     string
 		Synopsis  string
-		Thumbnail string
-		Order     int
 		CreatedAt time.Time
 	}
 
 	// Project associated with the serie
 	Project []struct {
-		Id        int
-		Name      string
-		Thumbnail string
-		Synopsis  string
+		Id       int
+		Name     string
+		Synopsis string
 	}
 }
 
