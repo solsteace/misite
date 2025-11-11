@@ -2,18 +2,9 @@ package page
 
 import "github.com/solsteace/misite/internal/entity"
 import "fmt"
-import "github.com/solsteace/misite/internal/component/utility"
+import "github.com/solsteace/misite/internal/utility/api"
 
-func newProjectHTMLIdentifier() string {
-    return "main-project"
-}
-
-templ onProject() {
-    @templ.JSUnsafeFuncCall(` window.scroll({ top: 0, left: 0, behavior: "smooth" })`)
-    @templ.JSUnsafeFuncCall(makeOutlineExpr(
-        newProjectHTMLIdentifier(), 
-        fmt.Sprintf("outline-%s", newProjectHTMLIdentifier())))
-}
+const projectHtmlId = "main-project"
 
 templ Project(project entity.Project) {
     <div class="lyt__1x2 lyt__1x2--1-3 specification">
@@ -30,12 +21,12 @@ templ Project(project entity.Project) {
             <div class="cmp__sticky">
                 <div class="cmp__sticky-elem specification__extra specification__outline">
                     <b class="u__h--6"> Outline </b>
-                    <nav id={fmt.Sprintf("outline-%s", newProjectHTMLIdentifier())} > </nav>
+                    <nav id={fmt.Sprintf("outline-%s", projectHtmlId)} > </nav>
                 </div>
             </div>
         </div>
 
-        <article id={newProjectHTMLIdentifier()} class="specification__content">
+        <article id={projectHtmlId} class="specification__content">
             <header class="specification__content-header">
                 <h1> {project.Name} </h1>
                 <p> {project.Synopsis} </p>
@@ -62,8 +53,8 @@ templ Project(project entity.Project) {
                                 class="tag-badge-list__tag"
                                 hx-trigger="click consume"
                                 hx-target="#page"
-                                hx-get={fmt.Sprintf("%s?tId=%d", utility.ExploreProjectUrl, t.Id)}
-                                href= {fmt.Sprintf("%s?tId=%d", utility.ExploreProjectUrl, t.Id)} 
+                                hx-get={fmt.Sprintf("%s?tId=%d", api.ExploreProjectUrl, t.Id)}
+                                href= {fmt.Sprintf("%s?tId=%d", api.ExploreProjectUrl, t.Id)} 
                             > {t.Name} </a> 
                         </li>
                     }
@@ -72,6 +63,12 @@ templ Project(project entity.Project) {
 
             @templ.Raw(project.Description)
         </article>
-        @onProject()
+
+        @templ.JSUnsafeFuncCall(` window.scroll({ top: 0, left: 0, behavior: "smooth" })`)
+        @templ.JSUnsafeFuncCall(
+            fmt.Sprintf(
+                "makeArticleOutline('%s', '%s')", 
+                projectHtmlId, 
+                fmt.Sprintf("outline-%s", projectHtmlId)))
     </div>
 }

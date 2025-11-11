@@ -224,7 +224,7 @@ h5, .u__h--5 {
 
 .serie__content-entry > a:hover,
 .specification__extra > a:hover,
-.exploration__entry > a:hover {
+.exploration__entry-title > a:hover {
     color: var(--secondary-color);
 }
 
@@ -247,6 +247,11 @@ h5, .u__h--5 {
     display: flex;
     flex-direction: column;
     gap: var(--gap-small);
+}
+.exploration__entry-title {
+    display: flex;
+    gap: var(--gap-medium);
+    align-items: center;
 }
 .exploration__tools {
     display: flex;

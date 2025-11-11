@@ -1,10 +1,10 @@
 package widget
 
 import "github.com/solsteace/misite/internal/entity"
-import "github.com/solsteace/misite/internal/component/utility"
 import "fmt"
+import "github.com/solsteace/misite/internal/utility/api"
 
-templ Tags(tags []entity.Tag, count []int, tagType string) {
+templ ExplorationTags(tags []entity.Tag, count []int, tagType string) {
     <ul 
         class="cmp__badge-list tag-badge-list"
         hx-replace-url="true"
@@ -16,12 +16,14 @@ templ Tags(tags []entity.Tag, count []int, tagType string) {
             <li> 
                 <a 
                     class="tag-badge-list__tag"
-                    hx-trigger="click"
                     if tagType == "article" || tagType == "articles" {
-                        hx-get={fmt.Sprintf("%s?tId=%d", utility.ExploreArticleUrl, t.Id)}
+                        href={fmt.Sprintf("%s?tId=%d", api.ExploreArticleUrl, t.Id)}
+                        hx-get={fmt.Sprintf("%s?tId=%d", api.ExploreArticleUrl, t.Id)}
                     } else if tagType == "projects" || tagType == "project" {
-                        hx-get={fmt.Sprintf("%s?tId=%d", utility.ExploreProjectUrl, t.Id)}
+                        href={fmt.Sprintf("%s?tId=%d", api.ExploreArticleUrl, t.Id)}
+                        hx-get={fmt.Sprintf("%s?tId=%d", api.ExploreProjectUrl, t.Id)}
                     }
+                    hx-trigger="click"
                 > {t.Name} ({count[idx]}) </a> 
             </li>
         }

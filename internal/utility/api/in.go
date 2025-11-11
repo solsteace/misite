@@ -1,4 +1,4 @@
-package utility
+package api
 
 const (
 	ExploreProjectUrl = "/projects"
