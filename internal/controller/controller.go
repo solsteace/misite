@@ -283,12 +283,22 @@ func (c Controller) Serie(w http.ResponseWriter, r *http.Request) error {
 		return fmt.Errorf("controller.Serie: %w", err)
 	}
 
+	// TODO: use workers
+	serieContentParam := persistence.SerieContentQueryParam{Page: 1, Limit: 10}
 	serie, err := c.service.Serie(int(serieId))
 	if err != nil {
 		return fmt.Errorf("controller<Controller.Serie>; %w", err)
 	}
+	serieProjects, err := c.service.SerieProjectList(serie.Id, serieContentParam)
+	if err != nil {
+		return fmt.Errorf("controller<Controller.Serie>; %w", err)
+	}
+	serieArticles, err := c.service.SerieArticleList(serie.Id, serieContentParam)
+	if err != nil {
+		return fmt.Errorf("controller<Controller.Serie>; %w", err)
+	}
 
-	pageComponent := page.Serie(serie)
+	pageComponent := page.Serie(serie, serieArticles, serieProjects)
 	if c.requestNeedsBase(r) {
 		if err := c.serveWithBase(pageComponent, w, r); err != nil {
 			return fmt.Errorf("controller.Serie: %w", err)

@@ -136,6 +136,30 @@ func (s Service) Serie(id int) (entity.Serie, error) {
 	return serie, nil
 }
 
+func (s Service) SerieArticleList(
+	id int,
+	param persistence.SerieContentQueryParam,
+) ([]entity.SerieArticleList, error) {
+	serieArticles, err := s.store.SerieArticleList(id, param)
+	if err != nil {
+		return []entity.SerieArticleList{}, fmt.Errorf(
+			"service<Service.SerieArticles>: %w", err)
+	}
+	return serieArticles, nil
+}
+
+func (s Service) SerieProjectList(
+	id int,
+	param persistence.SerieContentQueryParam,
+) ([]entity.SerieProjectList, error) {
+	serieProjects, err := s.store.SerieProjectList(id, param)
+	if err != nil {
+		return []entity.SerieProjectList{}, fmt.Errorf(
+			"service<Service.SerieProjects>: %w", err)
+	}
+	return serieProjects, nil
+}
+
 func (s Service) SerieList(param persistence.SerieListQueryParam) ([]entity.SerieList, error) {
 	serieList, err := s.store.SerieList(param)
 	if err != nil {
