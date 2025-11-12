@@ -127,10 +127,10 @@ func (s Service) CountProjectMatchingTags(tagIds []int) ([]entity.Tag, []int, er
 	return tags, count, nil
 }
 
-func (s Service) Serie(id int) (entity.Serie2, error) {
+func (s Service) Serie(id int) (entity.Serie, error) {
 	serie, err := s.store.Serie(id)
 	if err != nil {
-		return entity.Serie2{}, fmt.Errorf(
+		return entity.Serie{}, fmt.Errorf(
 			"service<Service.Serie>: %w", err)
 	}
 	return serie, nil

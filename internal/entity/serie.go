@@ -3,7 +3,7 @@ package entity
 import "time"
 
 // The model for viewing `serie` entry in `serie` page
-type Serie2 struct {
+type Serie struct {
 	Id          int
 	Name        string
 	Thumbnail   string
@@ -16,13 +16,16 @@ type Serie2 struct {
 		Title     string
 		Synopsis  string
 		CreatedAt time.Time
+		UpdatedAt time.Time
 	}
 
 	// Project associated with the serie
 	Project []struct {
-		Id       int
-		Name     string
-		Synopsis string
+		Id        int
+		Name      string
+		Synopsis  string
+		CreatedAt time.Time
+		UpdatedAt time.Time
 	}
 }
 
@@ -30,6 +33,11 @@ type Serie2 struct {
 type SerieList struct {
 	Id          int
 	Name        string
-	Thumbnail   string
 	Description string
+	CreatedAt   time.Time
+}
+
+// A serie entry is considered new for 5 days after its initial creation
+func (sl SerieList) IsNew() bool {
+	return time.Now().Sub(sl.CreatedAt) < time.Hour*24*5
 }

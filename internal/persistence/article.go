@@ -36,8 +36,8 @@ func (p Pg) Articles(param ArticlesQueryParam) ([]entity.ArticleList, error) {
 			articles.id AS "id",
 			articles.title AS "title",
 			articles.subtitle AS "subtitle",
-			articles.thumbnail AS "thumbnail",
 			articles.created_at AS "created_at",
+			articles.updated_at AS "updated_at",
 			tags.id AS "tag.id",
 			tags.name AS "tag.name",
 			series.id AS "serie.id",
@@ -51,7 +51,7 @@ func (p Pg) Articles(param ArticlesQueryParam) ([]entity.ArticleList, error) {
 				FROM matching_articles_by_tag
 				WHERE matching_articles_by_tag.article_id = articles.id)
 			AND ($2::int[] IS NULL OR articles.serie_id = ANY($2))
-		ORDER BY articles.id`
+		ORDER BY articles.updated_at DESC`
 	if param.Limit < 1 {
 		param.Limit = 10
 	}
@@ -74,8 +74,8 @@ func (p Pg) Articles(param ArticlesQueryParam) ([]entity.ArticleList, error) {
 		Id        int       `db:"id"`
 		Title     string    `db:"title"`
 		Subtitle  string    `db:"subtitle"`
-		Thumbnail string    `db:"thumbnail"`
 		CreatedAt time.Time `db:"created_at"`
+		UpdatedAt time.Time `db:"updated_at"`
 
 		Serie struct {
 			Id   sql.Null[int]    `db:"id"`
@@ -103,8 +103,8 @@ func (p Pg) Articles(param ArticlesQueryParam) ([]entity.ArticleList, error) {
 				Id:        r.Id,
 				Title:     r.Title,
 				Subtitle:  r.Subtitle,
-				Thumbnail: r.Thumbnail,
-				CreatedAt: r.CreatedAt})
+				CreatedAt: r.CreatedAt,
+				UpdatedAt: r.UpdatedAt})
 			lastArticle = &articles[len(articles)-1]
 		}
 		if r.Serie.Id.Valid {
@@ -134,8 +134,8 @@ func (p Pg) Article(id int) (entity.Article, error) {
 			articles.title AS "title",
 			articles.subtitle AS "subtitle",
 			articles.content AS "content",
-			articles.thumbnail AS "thumbnail",
 			articles.created_at AS "created_at",
+			articles.updated_at AS "updated_at",
 			tags.id AS "tag.id",
 			tags.name AS "tag.name",
 			series.id AS "serie.id",
@@ -152,8 +152,8 @@ func (p Pg) Article(id int) (entity.Article, error) {
 		Title     string    `db:"title"`
 		Subtitle  string    `db:"subtitle"`
 		Content   string    `db:"content"`
-		Thumbnail string    `db:"thumbnail"`
 		CreatedAt time.Time `db:"created_at"`
+		UpdatedAt time.Time `db:"updated_at"`
 
 		Serie struct {
 			Id   sql.Null[int]    `db:"id"`
@@ -177,8 +177,8 @@ func (p Pg) Article(id int) (entity.Article, error) {
 		Title:     rows[0].Title,
 		Subtitle:  rows[0].Subtitle,
 		Content:   rows[0].Content,
-		Thumbnail: rows[0].Thumbnail,
-		CreatedAt: rows[0].CreatedAt}
+		CreatedAt: rows[0].CreatedAt,
+		UpdatedAt: rows[0].UpdatedAt}
 	insertedTags := map[int]struct{}{}
 	for _, r := range rows {
 		if r.Serie.Id.Valid {

@@ -3,7 +3,7 @@ package page
 import "github.com/solsteace/misite/internal/entity"
 import "fmt"
 
-templ Serie(serie entity.Serie2) {
+templ Serie(serie entity.Serie) {
     <div class="serie">
         <header class="lyt__1x2 lyt__1x2--1-1">
             <div class="cmp__image serie__thumbnail">
@@ -24,22 +24,34 @@ templ Serie(serie entity.Serie2) {
         <div class="lyt__1x2 lyt__1x2--1-1 serie__contents">
             <section class="serie__content">
                 <div class="serie__content-heading">
-                    <p class="u__h--2"> Articles </p>
+                    <p class="u__h--3"> Articles </p>
                 </div>
                 if nArticle := len(serie.Article); nArticle > 0 {
-                    <div class="cmp__list serie__content-entry">
+                    <div class="cmp__list">
                         for idx, a := range serie.Article {
-                            <a 
-                                class="u__h--4"
-                                href={fmt.Sprintf("/article/%d", a.Id)}
-                                hx-get={fmt.Sprintf("/article/%d", a.Id)}
-                                hx-trigger="click"
-                                hx-target="#page"
-                                hx-swap="innerHTML"
-                                hx-push-url="true"
-                                hx-replace-url="true"
-                            > {a.Title} </a>
-                            <p> {a.Synopsis} </p>
+                            <div 
+                                if entity.ArticleIsNew(a.CreatedAt) {
+                                    class="serie__content-entry serie__content-entry--new "
+                                } else if entity.ArticleIsRecentlyUpdated(a.CreatedAt, a.UpdatedAt) {
+                                    class="serie__content-entry serie__content-entry--updated"
+                                } else {
+                                    class="serie__content-entry"
+                                }
+                            >
+                                <div class="serie__content-title" >
+                                    <a 
+                                        class="u__h--6"
+                                        href={fmt.Sprintf("/article/%d", a.Id)}
+                                        hx-get={fmt.Sprintf("/article/%d", a.Id)}
+                                        hx-trigger="click"
+                                        hx-target="#page"
+                                        hx-swap="innerHTML"
+                                        hx-push-url="true"
+                                        hx-replace-url="true"
+                                    > {a.Title} </a>
+                                </div>
+                                <p> {a.Synopsis} </p>
+                            </div>
 
                             if idx < nArticle - 1 {
                                 <span class="cmp__list-delimiter" />
@@ -53,22 +65,34 @@ templ Serie(serie entity.Serie2) {
 
             <section class="serie__content">
                 <div class="serie__content-heading">
-                    <p class="u__h--2"> Project </p>
+                    <p class="u__h--3"> Projects </p>
                 </div>
                 if nProject := len(serie.Project); nProject > 0 {
-                    <div class="cmp__list serie__content-entry">
+                    <div class="cmp__list">
                         for idx, p := range serie.Project {
-                            <a
-                                class="u__h--4"
-                                href={fmt.Sprintf("/project/%d", p.Id)}
-                                hx-get={fmt.Sprintf("/project/%d", p.Id)}
-                                hx-trigger="click"
-                                hx-target="#page"
-                                hx-swap="innerHTML"
-                                hx-push-url="true"
-                                hx-replace-url="true"
-                            > {p.Name} </a>
-                            <p> {p.Synopsis} </p>
+                            <div 
+                                if entity.ProjectIsNew(p.CreatedAt) {
+                                    class="serie__content-entry serie__content-entry--new "
+                                } else if entity.ProjectIsRecentlyUpdated(p.CreatedAt, p.UpdatedAt) {
+                                    class="serie__content-entry serie__content-entry--updated"
+                                } else {
+                                    class="serie__content-entry"
+                                }
+                            >
+                                <div class="serie__content-title" >
+                                    <a
+                                        class="u__h--6"
+                                        href={fmt.Sprintf("/project/%d", p.Id)}
+                                        hx-get={fmt.Sprintf("/project/%d", p.Id)}
+                                        hx-trigger="click"
+                                        hx-target="#page"
+                                        hx-swap="innerHTML"
+                                        hx-push-url="true"
+                                        hx-replace-url="true"
+                                    > {p.Name} </a>
+                                </div>
+                                <p> {p.Synopsis} </p>
+                            </div>
 
                             if idx < nProject - 1 {
                                 <span class="cmp__list-delimiter" />

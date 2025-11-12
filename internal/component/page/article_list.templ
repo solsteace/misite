@@ -24,12 +24,14 @@ templ ArticleList(article []entity.ArticleList, topTagsQuery string) {
         <div class="cmp__list exploration__entries" > 
             for idx, a := range article {
                 <div 
-                    if a.IsNew() {
+                    if entity.ArticleIsNew(a.CreatedAt) {
                         class="exploration__entry exploration__entry--new "
+                    } else if entity.ArticleIsRecentlyUpdated(a.CreatedAt, a.UpdatedAt) {
+                        class="exploration__entry exploration__entry--updated"
                     } else {
                         class="exploration__entry"
                     }
-                >   
+                >
                     <div class="exploration__entry-title">
                         <a 
                             class="u__h--3"

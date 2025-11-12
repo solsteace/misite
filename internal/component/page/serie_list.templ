@@ -10,14 +10,22 @@ templ SerieList(serieList []entity.SerieList) {
         </div>
         <div class="cmp__list exploration__entries">
             for idx, sl := range serieList {
-                <div class="exploration__entry">
-                    <a 
-                        class="u__h--3"
-                        href={fmt.Sprintf("/serie/%d", sl.Id)}
-                        hx-get={fmt.Sprintf("/serie/%d", sl.Id)}
-                        hx-trigger="click"
-                        hx-target="#page"
-                    > {sl.Name} </a>
+                <div 
+                    if sl.IsNew() {
+                        class="exploration__entry exploration__entry--new "
+                    } else {
+                        class="exploration__entry"
+                    }
+                >
+                    <div class="exploration__entry-title">
+                        <a 
+                            class="u__h--3"
+                            href={fmt.Sprintf("/serie/%d", sl.Id)}
+                            hx-get={fmt.Sprintf("/serie/%d", sl.Id)}
+                            hx-trigger="click"
+                            hx-target="#page"
+                        > {sl.Name} </a>
+                    </div>
                     <p> {sl.Description} </p>
                 </div>
 

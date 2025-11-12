@@ -5,7 +5,7 @@ VARS + BASIC ELEM OVERRIDE
     --bg-color: white;
     --primary-color: black;
     --primary-color-sw1: rgb(39, 39, 39);
-    --accent-color: grey;
+    --secondary-color: black;
 
     /* ICON NEEDS
     The values below are based on 16x16 "grid" 
@@ -20,8 +20,6 @@ VARS + BASIC ELEM OVERRIDE
     --primary-color: rgb(223, 235, 248);
     --primary-color-sw1: rgb(154, 171, 223);
     --secondary-color: rgb(255, 220, 143);
-
-    --theme-button-transform: translate(100%);
 
     /* ICON NEEDS
     The values below are based on 16x16 "grid" 
@@ -222,10 +220,36 @@ h5, .u__h--5 {
 
 
 
-.serie__content-entry > a:hover,
+.serie__content-title > a:hover,
 .specification__extra > a:hover,
 .exploration__entry-title > a:hover {
     color: var(--secondary-color);
+}
+
+
+
+.serie__content-title,
+.exploration__entry-title {
+    display: flex;
+    gap: var(--gap-medium);
+    align-items: center;
+}
+.serie__content-entry--new > .serie__content-title::after,
+.serie__content-entry--updated > .serie__content-title::after,
+.exploration__entry--new > .exploration__entry-title::after,
+.exploration__entry--updated > .exploration__entry-title::after {
+    font-size: 0.8rem;
+    background: var(--secondary-color);
+    color: var(--bg-color);
+    padding: 0px var(--gap-small);
+}
+.serie__content-entry--new > .serie__content-title::after,
+.exploration__entry--new > .exploration__entry-title::after {
+    content: "New!";
+}
+.serie__content-entry--updated > .serie__content-title::after,
+.exploration__entry--updated > .exploration__entry-title::after {
+    content: "Update!";
 }
 
 
@@ -247,11 +271,6 @@ h5, .u__h--5 {
     display: flex;
     flex-direction: column;
     gap: var(--gap-small);
-}
-.exploration__entry-title {
-    display: flex;
-    gap: var(--gap-medium);
-    align-items: center;
 }
 .exploration__tools {
     display: flex;
@@ -326,7 +345,7 @@ h5, .u__h--5 {
 .specification__extras {
     display: flex;
     flex-direction: column;
-    gap: var(--gap-medium);
+    gap: var(--gap-large);
 }
 .specification__extra {
     display: flex;
@@ -365,6 +384,10 @@ h5, .u__h--5 {
     flex-direction: row-reverse;
     align-items: center;
     gap: var(--gap-large);
+    flex-wrap: wrap;
+}
+.serie header > * {
+    min-width: 320px;
 }
 .serie__header-text {
     display: flex;

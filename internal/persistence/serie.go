@@ -23,19 +23,19 @@ func (p Pg) SerieList(param SerieListQueryParam) ([]entity.SerieList, error) {
 	}
 
 	var rows []struct {
-		Id          int    `db:"id"`
-		Name        string `db:"name"`
-		Thumbnail   string `db:"thumbnail"`
-		Description string `db:"description"`
+		Id          int       `db:"id"`
+		Name        string    `db:"name"`
+		Description string    `db:"description"`
+		CreatedAt   time.Time `db:"created_at"`
 	}
 	query := `
 		SELECT
 			series.id,
 			series.name,
-			series.thumbnail,
-			series.description
+			series.description,
+			series.created_at
 		FROM series
-		ORDER BY series.id
+		ORDER BY series.created_at
 		LIMIT $1 OFFSET $2`
 	args := []any{
 		param.Limit,
@@ -52,8 +52,8 @@ func (p Pg) SerieList(param SerieListQueryParam) ([]entity.SerieList, error) {
 			sl := entity.SerieList{
 				Id:          r.Id,
 				Name:        r.Name,
-				Thumbnail:   r.Thumbnail,
-				Description: r.Description}
+				Description: r.Description,
+				CreatedAt:   r.CreatedAt}
 			serieList = append(serieList, sl)
 			last = &serieList[len(serieList)-1]
 		}
@@ -61,7 +61,7 @@ func (p Pg) SerieList(param SerieListQueryParam) ([]entity.SerieList, error) {
 	return serieList, nil
 }
 
-func (p Pg) Serie(id int) (entity.Serie2, error) {
+func (p Pg) Serie(id int) (entity.Serie, error) {
 	var rows []struct {
 		Id          int    `db:"id"`
 		Name        string `db:"name"`
@@ -73,11 +73,14 @@ func (p Pg) Serie(id int) (entity.Serie2, error) {
 			Title     sql.Null[string]    `db:"title"`
 			Synopsis  sql.Null[string]    `db:"synopsis"`
 			CreatedAt sql.Null[time.Time] `db:"created_at"`
+			UpdatedAt sql.Null[time.Time] `db:"updated_at"`
 		}
 		Project struct {
-			Id       sql.Null[int]    `db:"id"`
-			Name     sql.Null[string] `db:"name"`
-			Synopsis sql.Null[string] `db:"synopsis"`
+			Id        sql.Null[int]       `db:"id"`
+			Name      sql.Null[string]    `db:"name"`
+			Synopsis  sql.Null[string]    `db:"synopsis"`
+			CreatedAt sql.Null[time.Time] `db:"created_at"`
+			UpdatedAt sql.Null[time.Time] `db:"updated_at"`
 		}
 	}
 	query := `
@@ -90,9 +93,13 @@ func (p Pg) Serie(id int) (entity.Serie2, error) {
 			articles.title AS "article.title",
 			articles.subtitle AS "article.synopsis",
 			articles.created_at AS "article.created_at",
+			articles.updated_at AS "article.updated_at",
+			articles.created_at AS "article.created_at",
 			projects.id AS "project.id",
 			projects.name AS "project.name",
-			projects.synopsis AS "project.synopsis"
+			projects.synopsis AS "project.synopsis",
+			projects.updated_at AS "project.updated_at",
+			projects.created_at AS "project.created_at"
 		FROM series
 		LEFT JOIN projects ON projects.devblog_serie = series.id
 		LEFT JOIN articles ON articles.serie_id = series.id
@@ -100,15 +107,15 @@ func (p Pg) Serie(id int) (entity.Serie2, error) {
 		ORDER BY articles.serie_order`
 	args := []any{id}
 	if err := p.db.Select(&rows, query, args...); err != nil {
-		return entity.Serie2{}, fmt.Errorf(
+		return entity.Serie{}, fmt.Errorf(
 			"persistence<Pg.Serie>: %w", err)
 	} else if len(rows) == 0 {
-		return entity.Serie2{}, oops.NotFound{}
+		return entity.Serie{}, oops.NotFound{}
 	}
 
 	insertedArticles := map[int]struct{}{}
 	insertedProjects := map[int]struct{}{}
-	serie := entity.Serie2{
+	serie := entity.Serie{
 		Id:          rows[0].Id,
 		Name:        rows[0].Name,
 		Thumbnail:   rows[0].Thumbnail,
@@ -124,11 +131,13 @@ func (p Pg) Serie(id int) (entity.Serie2, error) {
 						Title     string
 						Synopsis  string
 						CreatedAt time.Time
+						UpdatedAt time.Time
 					}{
 						article.Id.V,
 						article.Title.V,
 						article.Synopsis.V,
-						article.CreatedAt.V})
+						article.CreatedAt.V,
+						article.UpdatedAt.V})
 			}
 		}
 		if r.Project.Id.Valid {
@@ -136,13 +145,17 @@ func (p Pg) Serie(id int) (entity.Serie2, error) {
 			if _, ok := insertedProjects[project.Id.V]; !ok {
 				insertedProjects[project.Id.V] = struct{}{}
 				serie.Project = append(serie.Project, struct {
-					Id       int
-					Name     string
-					Synopsis string
+					Id        int
+					Name      string
+					Synopsis  string
+					CreatedAt time.Time
+					UpdatedAt time.Time
 				}{
 					project.Id.V,
 					project.Name.V,
-					project.Synopsis.V})
+					project.Synopsis.V,
+					project.CreatedAt.V,
+					project.UpdatedAt.V})
 			}
 		}
 	}

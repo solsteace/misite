@@ -3,6 +3,7 @@ package persistence
 import (
 	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/solsteace/misite/internal/entity"
 	"github.com/solsteace/misite/internal/utility/lib/oops"
@@ -32,8 +33,9 @@ func (p Pg) Projects(param ProjectsQueryParam) ([]entity.ProjectList, error) {
 		SELECT
 			projects.id AS "id",
 			projects.name AS "name",
-			projects.thumbnail AS "thumbnail",
 			projects.synopsis AS "synopsis",
+			projects.created_at AS "created_at",
+			projects.updated_at AS "updated_at",
 			tags.id AS "tag.id",
 			tags.name AS "tag.name",
 			series.id AS "serie.id",
@@ -46,7 +48,7 @@ func (p Pg) Projects(param ProjectsQueryParam) ([]entity.ProjectList, error) {
 			(SELECT true
 			FROM matching_projects_by_tag
 			WHERE matching_projects_by_tag.project_id = projects.id)
-		ORDER BY projects.id`
+		ORDER BY projects.updated_at`
 	if param.Limit < 1 {
 		param.Limit = 10
 	}
@@ -62,10 +64,12 @@ func (p Pg) Projects(param ProjectsQueryParam) ([]entity.ProjectList, error) {
 	}
 
 	var rows []struct {
-		Id        int    `db:"id"`
-		Name      string `db:"name"`
-		Thumbnail string `db:"thumbnail"`
-		Synopsis  string `db:"synopsis"`
+		Id        int       `db:"id"`
+		Name      string    `db:"name"`
+		Thumbnail string    `db:"thumbnail"`
+		Synopsis  string    `db:"synopsis"`
+		CreatedAt time.Time `db:"created_at"`
+		UpdatedAt time.Time `db:"updated_at"`
 
 		Serie struct {
 			Id   sql.Null[int]    `db:"id"`
@@ -92,8 +96,9 @@ func (p Pg) Projects(param ProjectsQueryParam) ([]entity.ProjectList, error) {
 			projects = append(projects, entity.ProjectList{
 				Id:        r.Id,
 				Name:      r.Name,
-				Thumbnail: r.Thumbnail,
-				Synopsis:  r.Synopsis})
+				Synopsis:  r.Synopsis,
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now()})
 			lastProject = &projects[len(projects)-1]
 		}
 		if r.Tag.Id.Valid {
@@ -124,9 +129,10 @@ func (p Pg) Project(id int) (entity.Project, error) {
 		SELECT
 			projects.id AS "id",
 			projects.name AS "name",
-			projects.thumbnail AS "thumbnail",
 			projects.synopsis AS "synopsis",
 			projects.description AS "description",
+			projects.created_at AS "created_at",
+			projects.updated_at AS "updated_at",
 			series.id AS "serie.id",
 			series.name AS "serie.name",
 			tags.id AS "tag.id",
@@ -144,11 +150,12 @@ func (p Pg) Project(id int) (entity.Project, error) {
 	args := []any{id}
 
 	var rows []struct {
-		Id          int    `db:"id"`
-		Name        string `db:"name"`
-		Thumbnail   string `db:"thumbnail"`
-		Synopsis    string `db:"synopsis"`
-		Description string `db:"description"`
+		Id          int       `db:"id"`
+		Name        string    `db:"name"`
+		Synopsis    string    `db:"synopsis"`
+		Description string    `db:"description"`
+		CreatedAt   time.Time `db:"created_at"`
+		UpdatedAt   time.Time `db:"updated_at"`
 
 		Serie struct {
 			Id   sql.Null[int]    `db:"id"`
@@ -176,9 +183,10 @@ func (p Pg) Project(id int) (entity.Project, error) {
 	project := entity.Project{
 		Id:          projectRow.Id,
 		Name:        projectRow.Name,
-		Thumbnail:   projectRow.Thumbnail,
 		Synopsis:    projectRow.Synopsis,
-		Description: projectRow.Description}
+		Description: projectRow.Description,
+		CreatedAt:   projectRow.CreatedAt,
+		UpdatedAt:   projectRow.UpdatedAt}
 	if projectRow.Serie.Id.Valid {
 		project.Serie = &struct {
 			Id   int

@@ -23,7 +23,15 @@ templ ProjectList(project []entity.ProjectList, topTagsQuery string) {
 
         <div class="cmp__list exploration__entries" > 
             for idx, p := range project {
-                <div class="exploration__entry">
+                <div 
+                    if entity.ProjectIsNew(p.CreatedAt) {
+                        class="exploration__entry exploration__entry--new "
+                    } else if entity.ProjectIsRecentlyUpdated(p.CreatedAt, p.UpdatedAt) {
+                        class="exploration__entry exploration__entry--updated"
+                    } else {
+                        class="exploration__entry"
+                    }
+                >
                     <div class="exploration__entry-title">
                         <a 
                             class="u__h--3"
