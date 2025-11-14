@@ -17,24 +17,6 @@ func NewService(store *persistence.Pg) Service {
 	return Service{store: store}
 }
 
-func (s Service) Articles(param persistence.ArticlesQueryParam) ([]entity.ArticleList, error) {
-	articles, err := s.store.Articles(param)
-	if err != nil {
-		return []entity.ArticleList{}, fmt.Errorf(
-			"service<Service.Articles>: %w", err)
-	}
-	return articles, nil
-}
-
-func (s Service) Article(id int) (entity.Article, error) {
-	article, err := s.store.Article(id)
-	if err != nil {
-		return entity.Article{}, fmt.Errorf(
-			"service<Service.Article>: %w", err)
-	}
-	return article, nil
-}
-
 func (s Service) MostTagsOnArticles(articles []entity.ArticleList, limit int) []int {
 	tags := make(map[int]int)
 	tagIds := []int{}
@@ -72,24 +54,6 @@ func (s Service) CountArticleMatchingTags(tagIds []int) ([]entity.Tag, []int, er
 	return tags, count, nil
 }
 
-func (s Service) Projects(param persistence.ProjectsQueryParam) ([]entity.ProjectList, error) {
-	projects, err := s.store.Projects(param)
-	if err != nil {
-		return []entity.ProjectList{}, fmt.Errorf(
-			"service<Service.Projects>: %w", err)
-	}
-	return projects, nil
-}
-
-func (s Service) Project(id int) (entity.Project, error) {
-	project, err := s.store.Project(id)
-	if err != nil {
-		return entity.Project{}, fmt.Errorf(
-			"service<Service.Project>: %w", err)
-	}
-	return project, nil
-}
-
 func (s Service) MostTagsOnProjects(projects []entity.ProjectList, limit int) []int {
 	tags := make(map[int]int)
 	tagIds := []int{}
@@ -125,46 +89,4 @@ func (s Service) CountProjectMatchingTags(tagIds []int) ([]entity.Tag, []int, er
 			"service<Service.CountProjectMatchingTags>: %w", err)
 	}
 	return tags, count, nil
-}
-
-func (s Service) Serie(id int) (entity.Serie, error) {
-	serie, err := s.store.Serie(id)
-	if err != nil {
-		return entity.Serie{}, fmt.Errorf(
-			"service<Service.Serie>: %w", err)
-	}
-	return serie, nil
-}
-
-func (s Service) SerieArticleList(
-	id int,
-	param persistence.SerieContentQueryParam,
-) ([]entity.SerieArticleList, error) {
-	serieArticles, err := s.store.SerieArticleList(id, param)
-	if err != nil {
-		return []entity.SerieArticleList{}, fmt.Errorf(
-			"service<Service.SerieArticles>: %w", err)
-	}
-	return serieArticles, nil
-}
-
-func (s Service) SerieProjectList(
-	id int,
-	param persistence.SerieContentQueryParam,
-) ([]entity.SerieProjectList, error) {
-	serieProjects, err := s.store.SerieProjectList(id, param)
-	if err != nil {
-		return []entity.SerieProjectList{}, fmt.Errorf(
-			"service<Service.SerieProjects>: %w", err)
-	}
-	return serieProjects, nil
-}
-
-func (s Service) SerieList(param persistence.SerieListQueryParam) ([]entity.SerieList, error) {
-	serieList, err := s.store.SerieList(param)
-	if err != nil {
-		return []entity.SerieList{}, fmt.Errorf(
-			"service<Service.SerieList>: %w", err)
-	}
-	return serieList, nil
 }
