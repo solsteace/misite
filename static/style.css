@@ -277,11 +277,49 @@ h5, .u__h--5 {
     flex-direction: column;
     gap: var(--gap-small);
 }
+.exploration__search {
+    display: flex;
+    flex-direction: column;
+    gap:var(--gap-tiny);
+}
+.exploration__search > form {
+    display: flex;
+}
+.exploration__search > form > input {
+    outline: none;
+    padding: var(--gap-tiny) 0px var(--gap-tiny) var(--gap-tiny);
+    flex: 1;
+    background-color: var(--bg-color);
+    border: 1px solid var(--primary-color-sw1);
+}
+.exploration__search > form > button {
+    color: var(--bg-color);
+    border: 1px solid var(--primary-color-sw1);
+    background-color: var(--primary-color-sw1);
+}
 .exploration__entries > .cmp__list-delimiter {
     border-bottom: 0px;
     padding: var(--gap-small) 0px;
 }
-
+.exploration__expand {
+    margin-top: var(--gap-medium);
+    display: flex;
+    justify-content: center;
+}
+.exploration__expand > button{
+    background: var(--bg-color);
+    color: var(--primary-color);
+    width: 100%;
+    border: 1px solid var(--primary-color-sw1);
+    padding: var(--gap-tiny) var(--gap-small);
+}
+.exploration__expand > button:hover {
+    cursor: pointer;
+    filter: invert(100%);
+}
+.exploration__expand--finish > button{
+    pointer-events: none;
+}
 
 
 .specification {

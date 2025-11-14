@@ -4,10 +4,34 @@ import "github.com/solsteace/misite/internal/entity"
 import "fmt"
 import "github.com/solsteace/misite/internal/utility/api"
 
+var articleButtonOnce = templ.NewOnceHandle()
+
 templ ArticleList(article []entity.ArticleList, topTagsQuery string) {
-    <div class="lyt__1x2 lyt__1x2--1-3 exploration">
+    <div 
+        id="articleListPage"
+        class="lyt__1x2 lyt__1x2--1-3 exploration"
+        x-data="articleList"
+    >
         <div class="exploration__tools"> 
-            <section> SEARCH FUNCTIONALITY HERE </section>
+            <section class="exploration__search"> 
+                <form>
+                    <input 
+                        id="article_search"
+                        type="search"
+                        name="prompt" 
+                        placeholder="(WIP) Search something!"
+                        x-model="$data.prompt"
+                        :value="$data.prompt"
+                        />
+                    <button 
+                        type="submit"
+                        hx-replace-url="false"
+                        hx-push-url="false"
+                        hx-post="/search?cat=article"
+                        hx-target="#test"
+                    > O </button> // make SVG magnifying glass
+                </form>
+            </section>
             <section>
                 <b class="u__h--4"> # </b>
                 <nav 
@@ -21,66 +45,138 @@ templ ArticleList(article []entity.ArticleList, topTagsQuery string) {
             </section>
         </div>
 
-        <div class="cmp__list exploration__entries" > 
-            for idx, a := range article {
-                <div 
-                    if entity.ArticleIsNew(a.CreatedAt) {
-                        class="exploration__entry exploration__entry--new "
-                    } else if entity.ArticleIsRecentlyUpdated(a.CreatedAt, a.UpdatedAt) {
-                        class="exploration__entry exploration__entry--updated"
-                    } else {
-                        class="exploration__entry"
-                    }
-                >
-                    <div class="exploration__entry-title">
+        <section>
+            <div 
+                id="exploration__list"
+                class="cmp__list exploration__entries"
+                if nArticle := len(article); nArticle > 0 {
+                    x-data={fmt.Sprintf(
+                        "{lastItem: %d}",
+                        article[nArticle - 1].Id)}
+                }
+            > 
+                @Articles(article) 
+            </div>
+            <div class="exploration__expand">
+                <button
+                    x-show="!endOfResult"
+                    :hx-post="`/search?cat=article&page=${$data.page + 1}`"
+                    hx-target="#exploration__list"
+                    hx-swap="beforeend"
+                    hx-replace-url="false"
+                    hx-push-url="false"
+                > Load more </button>
+                <p x-show="endOfResult" > No more items! </p>
+            </div>
+        </section>
+    </div>
+}
+
+templ Articles(article []entity.ArticleList) {
+    for idx, a := range article {
+        <div 
+            if entity.ArticleIsNew(a.CreatedAt) {
+                class="exploration__entry exploration__entry--new "
+            } else if entity.ArticleIsRecentlyUpdated(a.CreatedAt, a.UpdatedAt) {
+                class="exploration__entry exploration__entry--updated"
+            } else {
+                class="exploration__entry"
+            }
+
+            if idx == len(article) - 1 {
+                x-init={fmt.Sprintf("onLastItem(%d)", a.Id)}
+            }
+        >
+            <div class="exploration__entry-title">
+                <a 
+                    class="u__h--3"
+                    href={fmt.Sprintf("/article/%d", a.Id)}
+                    hx-get={fmt.Sprintf("/article/%d", a.Id)}
+                    hx-trigger="click"
+                    hx-target="#page"
+                    hx-swap="innerHTML"
+                    hx-replace-url="true"
+                    hx-push-url="true"
+                > {a.Title} </a>
+            </div>
+            <p> {a.Subtitle} </p>
+
+            <ul class="cmp__badge-list tag-badge-list">
+                if a.Serie != nil {
+                    <li>
                         <a 
-                            class="u__h--3"
-                            href={fmt.Sprintf("/article/%d", a.Id)}
-                            hx-get={fmt.Sprintf("/article/%d", a.Id)}
-                            hx-trigger="click"
+                            class="tag-badge-list__tag tag-badge-list__tag--special"
+                            href={fmt.Sprintf("/serie/%d", a.Serie.Id)}
+                            hx-get={fmt.Sprintf("/serie/%d", a.Serie.Id)}
+                            hx-trigger="click consume"
                             hx-target="#page"
                             hx-swap="innerHTML"
                             hx-replace-url="true"
                             hx-push-url="true"
-                        > {a.Title} </a>
-                    </div>
-                    <p> {a.Subtitle} </p>
-
-                    <ul class="cmp__badge-list tag-badge-list">
-                        if a.Serie != nil {
-                            <li>
-                                <a 
-                                    class="tag-badge-list__tag tag-badge-list__tag--special"
-                                    href={fmt.Sprintf("/serie/%d", a.Serie.Id)}
-                                    hx-get={fmt.Sprintf("/serie/%d", a.Serie.Id)}
-                                    hx-trigger="click consume"
-                                    hx-target="#page"
-                                    hx-swap="innerHTML"
-                                    hx-replace-url="true"
-                                    hx-push-url="true"
-                                > {a.Serie.Name} </a> 
-                            </li>
-                        }
-                        if len(a.Tag) > 0 {
-                            for _, t := range a.Tag {
-                                <li> 
-                                    <a
-                                        class="tag-badge-list__tag"
-                                        hx-trigger="click consume"
-                                        hx-target="#page"
-                                        hx-get={fmt.Sprintf("%s?tId=%d", api.ExploreArticleUrl, t.Id)}
-                                        href= {fmt.Sprintf("%s?tId=%d", api.ExploreArticleUrl, t.Id)} 
-                                    > {t.Name} </a> 
-                                </li>
-                            }
-                        }
-                    </ul>
-                </div>
-
-                if idx < len(article) - 1 {
-                    <div class="cmp__list-delimiter"> </div>
+                        > {a.Serie.Name} </a> 
+                    </li>
                 }
-            }
+                if len(a.Tag) > 0 {
+                    for _, t := range a.Tag {
+                        <li > 
+                            <a
+                                class="tag-badge-list__tag"
+                                href= {fmt.Sprintf("%s?tId=%d", api.ExploreArticleUrl, t.Id)} 
+                                hx-get={fmt.Sprintf("%s?tId=%d", api.ExploreArticleUrl, t.Id)}
+                                hx-trigger="click consume"
+                                hx-target="#page"
+                            > {t.Name} </a> 
+                        </li>
+                    }
+                }
+            </ul>
         </div>
-    </div>
+
+        <div class="cmp__list-delimiter"> </div>
+    }
+}
+
+templ ArticleListScript() {
+    <script> (() => {
+        const searchPath = "/search?cat=article"
+        document.addEventListener('alpine:init', (e) => {
+            Alpine.data('articleList', () => ({
+                prompt:'',
+                page: 1,
+                lastItem: 0,
+                endOfResult: false,
+                onEndOfResult() {
+                    this.endOfResult = true
+                }, 
+                onExpand() {
+                    this.page++
+                },
+                onLastItem(lastItemId) {
+                    this.lastItem = lastItemId
+                },
+            }))
+        })
+
+        document.body.addEventListener('htmx:beforeSwap', (e) => {
+            const req = e.detail.xhr
+            const resUrl = new URL(req.responseURL)
+            const resUrlParams = resUrl.searchParams
+            const isMyRequest = `${resUrl.pathname}?cat=${resUrlParams.get("cat")}` == searchPath
+            if(!isMyRequest) {
+                return
+            }
+
+            const prop = Alpine.$data(document.getElementById("articleListPage")) // Undocumented, see: https://github.com/alpinejs/alpine/issues/203
+            if(req.status != 200) {
+                e.preventDefault(); return
+            } else if(!req.responseText) {
+                prop.onEndOfResult()
+                e.preventDefault(); return
+            }
+            prop.onExpand()
+            Alpine.nextTick(() => {
+                htmx.process(e.detail.requestConfig.elt)
+            })
+        })
+    })() </script>
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/solsteace/misite/internal/component/widget"
 	"github.com/solsteace/misite/internal/persistence"
 	"github.com/solsteace/misite/internal/service"
+	"github.com/solsteace/misite/internal/utility/lib/oops"
 )
 
 const (
@@ -43,15 +44,10 @@ func NewController(
 		htmxUrl:     htmxUrl}
 }
 
-// Checks whether the request only needs the page component or the whole full page
-//
-// Assuming all component only requests came from the app which uses HTMX,
-// requests for fragments without `Hx-Request` would be assumed as a request
-// for a full page (base + wanted page). This is not totally fool-proof as it
-// could be "spoofed", but this will do for now
-func (c Controller) requestNeedsBase(r *http.Request) bool {
+// This is not totally fool-proof as it could be "spoofed". Better way? maybe next time
+func (c Controller) isAppRequest(r *http.Request) bool {
 	_, ok := r.Header["Hx-Request"]
-	return !ok
+	return ok
 }
 
 // Serves a page with its base
@@ -69,7 +65,7 @@ func (c Controller) serveWithBase(
 
 func (c Controller) Home(w http.ResponseWriter, r *http.Request) error {
 	pageComponent := page.Home(c.indexUrl)
-	if c.requestNeedsBase(r) {
+	if !c.isAppRequest(r) {
 		return c.serveWithBase(pageComponent, w, r)
 	} else if err := pageComponent.Render(context.Background(), w); err != nil {
 		return fmt.Errorf("controller.Home: %w", err)
@@ -80,38 +76,40 @@ func (c Controller) Home(w http.ResponseWriter, r *http.Request) error {
 func (c Controller) ArticleList(w http.ResponseWriter, r *http.Request) error {
 	urlQuery := r.URL.Query()
 	param := persistence.ArticlesQueryParam{}
-	if sPage := urlQuery.Get("page"); sPage != "" {
-		nPage, err := strconv.ParseInt(sPage, 10, strconv.IntSize)
-		if err != nil {
-			return fmt.Errorf("controller.ArticleList: %w", err)
-		} else if nPage < 0 {
-			nPage = 0
+	if c.isAppRequest(r) {
+		if sPage := urlQuery.Get("page"); sPage != "" {
+			nPage, err := strconv.ParseInt(sPage, 10, strconv.IntSize)
+			if err != nil {
+				return fmt.Errorf("controller.ArticleList: %w", err)
+			} else if nPage < 0 {
+				nPage = 0
+			}
+			param.Page = int(nPage)
 		}
-		param.Page = int(nPage)
-	}
-	if sLimit := urlQuery.Get("limit"); sLimit != "" {
-		nLimit, err := strconv.ParseInt(sLimit, 10, strconv.IntSize)
-		if err != nil {
-			return fmt.Errorf("controller.ArticleList: %w", err)
-		} else if nLimit < 0 {
-			nLimit = dEFAULT_PAGE_SIZE
+		if sLimit := urlQuery.Get("limit"); sLimit != "" {
+			nLimit, err := strconv.ParseInt(sLimit, 10, strconv.IntSize)
+			if err != nil {
+				return fmt.Errorf("controller.ArticleList: %w", err)
+			} else if nLimit < 0 {
+				nLimit = dEFAULT_PAGE_SIZE
+			}
+			param.Limit = int(nLimit)
 		}
-		param.Limit = int(nLimit)
-	}
-	for _, id := range urlQuery[tagQueryParam] {
-		nId, err := strconv.ParseInt(id, 10, strconv.IntSize)
-		if err != nil {
-			return fmt.Errorf("controller.ArticleList: %w", err)
-		} else if nId > 0 {
-			param.TagId = append(param.TagId, int(nId))
+		for _, id := range urlQuery[tagQueryParam] {
+			nId, err := strconv.ParseInt(id, 10, strconv.IntSize)
+			if err != nil {
+				return fmt.Errorf("controller.ArticleList: %w", err)
+			} else if nId > 0 {
+				param.TagId = append(param.TagId, int(nId))
+			}
 		}
-	}
-	for _, id := range urlQuery[serieQueryParam] {
-		nId, err := strconv.ParseInt(id, 10, strconv.IntSize)
-		if err != nil {
-			return fmt.Errorf("controller.ArticleList: %w", err)
-		} else if nId > 0 {
-			param.SerieId = append(param.SerieId, int(nId))
+		for _, id := range urlQuery[serieQueryParam] {
+			nId, err := strconv.ParseInt(id, 10, strconv.IntSize)
+			if err != nil {
+				return fmt.Errorf("controller.ArticleList: %w", err)
+			} else if nId > 0 {
+				param.SerieId = append(param.SerieId, int(nId))
+			}
 		}
 	}
 
@@ -130,7 +128,7 @@ func (c Controller) ArticleList(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	pageComponent := page.ArticleList(articles, sTopTags)
-	if c.requestNeedsBase(r) {
+	if !c.isAppRequest(r) {
 		if err := c.serveWithBase(pageComponent, w, r); err != nil {
 			return fmt.Errorf("controller.ArticleList: %w", err)
 		}
@@ -152,7 +150,7 @@ func (c Controller) Article(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	pageComponent := page.Article(article)
-	if c.requestNeedsBase(r) {
+	if !c.isAppRequest(r) {
 		if err := c.serveWithBase(pageComponent, w, r); err != nil {
 			return fmt.Errorf("controller.Article: %w", err)
 		}
@@ -165,30 +163,32 @@ func (c Controller) Article(w http.ResponseWriter, r *http.Request) error {
 func (c Controller) ProjectList(w http.ResponseWriter, r *http.Request) error {
 	urlQuery := r.URL.Query()
 	param := persistence.ProjectsQueryParam{}
-	if sPage := urlQuery.Get("page"); sPage != "" {
-		nPage, err := strconv.ParseInt(sPage, 10, strconv.IntSize)
-		if err != nil {
-			return fmt.Errorf("controller.ProjectList: %w", err)
-		} else if nPage < 0 {
-			nPage = 0
+	if c.isAppRequest(r) {
+		if sPage := urlQuery.Get("page"); sPage != "" {
+			nPage, err := strconv.ParseInt(sPage, 10, strconv.IntSize)
+			if err != nil {
+				return fmt.Errorf("controller.ProjectList: %w", err)
+			} else if nPage < 0 {
+				nPage = 0
+			}
+			param.Page = int(nPage)
 		}
-		param.Page = int(nPage)
-	}
-	if sLimit := urlQuery.Get("limit"); sLimit != "" {
-		nLimit, err := strconv.ParseInt(sLimit, 10, strconv.IntSize)
-		if err != nil {
-			return fmt.Errorf("controller.ProjectList: %w", err)
-		} else if nLimit < 0 {
-			nLimit = dEFAULT_PAGE_SIZE
+		if sLimit := urlQuery.Get("limit"); sLimit != "" {
+			nLimit, err := strconv.ParseInt(sLimit, 10, strconv.IntSize)
+			if err != nil {
+				return fmt.Errorf("controller.ProjectList: %w", err)
+			} else if nLimit < 0 {
+				nLimit = dEFAULT_PAGE_SIZE
+			}
+			param.Limit = int(nLimit)
 		}
-		param.Limit = int(nLimit)
-	}
-	for _, id := range urlQuery[tagQueryParam] {
-		nId, err := strconv.ParseInt(id, 10, strconv.IntSize)
-		if err != nil {
-			return fmt.Errorf("controller.ProjectList: %w", err)
-		} else if nId > 0 {
-			param.TagId = append(param.TagId, int(nId))
+		for _, id := range urlQuery[tagQueryParam] {
+			nId, err := strconv.ParseInt(id, 10, strconv.IntSize)
+			if err != nil {
+				return fmt.Errorf("controller.ProjectList: %w", err)
+			} else if nId > 0 {
+				param.TagId = append(param.TagId, int(nId))
+			}
 		}
 	}
 
@@ -207,7 +207,7 @@ func (c Controller) ProjectList(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	pageComponent := page.ProjectList(projects, sTopTags)
-	if c.requestNeedsBase(r) {
+	if !c.isAppRequest(r) {
 		if err := c.serveWithBase(pageComponent, w, r); err != nil {
 			return fmt.Errorf("controller.ProjectList: %w", err)
 		}
@@ -229,7 +229,7 @@ func (c Controller) Project(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	pageComponent := page.Project(project)
-	if c.requestNeedsBase(r) {
+	if !c.isAppRequest(r) {
 		if err := c.serveWithBase(pageComponent, w, r); err != nil {
 			return fmt.Errorf("controller.Project: %w", err)
 		}
@@ -242,23 +242,25 @@ func (c Controller) Project(w http.ResponseWriter, r *http.Request) error {
 func (c Controller) SerieList(w http.ResponseWriter, r *http.Request) error {
 	urlQuery := r.URL.Query()
 	param := persistence.SerieListQueryParam{}
-	if sPage := urlQuery.Get("page"); sPage != "" {
-		nPage, err := strconv.ParseInt(sPage, 10, strconv.IntSize)
-		if err != nil {
-			return fmt.Errorf("controller.SerieList: %w", err)
-		} else if nPage < 0 {
-			nPage = 0
+	if c.isAppRequest(r) {
+		if sPage := urlQuery.Get("page"); sPage != "" {
+			nPage, err := strconv.ParseInt(sPage, 10, strconv.IntSize)
+			if err != nil {
+				return fmt.Errorf("controller.SerieList: %w", err)
+			} else if nPage < 0 {
+				nPage = 0
+			}
+			param.Page = int(nPage)
 		}
-		param.Page = int(nPage)
-	}
-	if sLimit := urlQuery.Get("limit"); sLimit != "" {
-		nLimit, err := strconv.ParseInt(sLimit, 10, strconv.IntSize)
-		if err != nil {
-			return fmt.Errorf("controller.SerieList: %w", err)
-		} else if nLimit < 0 {
-			nLimit = dEFAULT_PAGE_SIZE
+		if sLimit := urlQuery.Get("limit"); sLimit != "" {
+			nLimit, err := strconv.ParseInt(sLimit, 10, strconv.IntSize)
+			if err != nil {
+				return fmt.Errorf("controller.SerieList: %w", err)
+			} else if nLimit < 0 {
+				nLimit = dEFAULT_PAGE_SIZE
+			}
+			param.Limit = int(nLimit)
 		}
-		param.Limit = int(nLimit)
 	}
 
 	serieList, err := c.service.SerieList(param)
@@ -267,7 +269,7 @@ func (c Controller) SerieList(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	pageComponent := page.SerieList(serieList)
-	if c.requestNeedsBase(r) {
+	if !c.isAppRequest(r) {
 		if err := c.serveWithBase(pageComponent, w, r); err != nil {
 			return fmt.Errorf("controller.SerieList: %w", err)
 		}
@@ -299,7 +301,7 @@ func (c Controller) Serie(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	pageComponent := page.Serie(serie, serieArticles, serieProjects)
-	if c.requestNeedsBase(r) {
+	if !c.isAppRequest(r) {
 		if err := c.serveWithBase(pageComponent, w, r); err != nil {
 			return fmt.Errorf("controller.Serie: %w", err)
 		}
@@ -312,7 +314,7 @@ func (c Controller) Serie(w http.ResponseWriter, r *http.Request) error {
 func (c Controller) NotFound(w http.ResponseWriter, r *http.Request) error {
 	pageComponent := page.NotFound()
 	w.WriteHeader(http.StatusNotFound)
-	if c.requestNeedsBase(r) {
+	if !c.isAppRequest(r) {
 		if err := c.serveWithBase(pageComponent, w, r); err != nil {
 			return fmt.Errorf("controller.NotFound: %w", err)
 		}
@@ -356,4 +358,127 @@ func (c Controller) ExplorationTags(w http.ResponseWriter, r *http.Request) erro
 		return fmt.Errorf("controller.Tags: %w", err)
 	}
 	return nil
+}
+
+// MEGA TODO: REFACTOR
+func (c Controller) Search(w http.ResponseWriter, r *http.Request) error {
+	if !c.isAppRequest(r) {
+		return oops.Forbidden{}
+	}
+
+	prompt := r.FormValue("prompt")
+	switch urlQuery := r.URL.Query(); urlQuery.Get("cat") {
+	case "article":
+		if prompt == "" {
+			param := persistence.ArticlesQueryParam{}
+			if sPage := urlQuery.Get("page"); sPage != "" {
+				nPage, err := strconv.ParseInt(sPage, 10, strconv.IntSize)
+				if err != nil {
+					return fmt.Errorf("controller.Search: %w", err)
+				} else if nPage < 0 {
+					nPage = 0
+				}
+				param.Page = int(nPage)
+			}
+			if sLimit := urlQuery.Get("limit"); sLimit != "" {
+				nLimit, err := strconv.ParseInt(sLimit, 10, strconv.IntSize)
+				if err != nil {
+					return fmt.Errorf("controller.ArticleList: %w", err)
+				} else if nLimit < 0 {
+					nLimit = dEFAULT_PAGE_SIZE
+				}
+				param.Limit = int(nLimit)
+			}
+
+			articles, err := c.service.Articles(param)
+			if err != nil {
+				return fmt.Errorf("controller.Search: %w", err)
+			}
+
+			pageComponent := page.Articles(articles)
+			if !c.isAppRequest(r) {
+				if err := c.serveWithBase(pageComponent, w, r); err != nil {
+					return fmt.Errorf("controller.Search: %w", err)
+				}
+			} else if err := pageComponent.Render(context.Background(), w); err != nil {
+				return fmt.Errorf("controller.Search: %w", err)
+			}
+			return nil
+		}
+	case "project":
+		if prompt == "" {
+			param := persistence.ProjectsQueryParam{}
+			if sPage := urlQuery.Get("page"); sPage != "" {
+				nPage, err := strconv.ParseInt(sPage, 10, strconv.IntSize)
+				if err != nil {
+					return fmt.Errorf("controller.ProjectList: %w", err)
+				} else if nPage < 0 {
+					nPage = 0
+				}
+				param.Page = int(nPage)
+			}
+			if sLimit := urlQuery.Get("limit"); sLimit != "" {
+				nLimit, err := strconv.ParseInt(sLimit, 10, strconv.IntSize)
+				if err != nil {
+					return fmt.Errorf("controller.ProjectList: %w", err)
+				} else if nLimit < 0 {
+					nLimit = dEFAULT_PAGE_SIZE
+				}
+				param.Limit = int(nLimit)
+			}
+
+			projects, err := c.service.Projects(param)
+			if err != nil {
+				return fmt.Errorf("controller.ProjectList: %w", err)
+			}
+
+			pageComponent := page.Projects(projects)
+			if !c.isAppRequest(r) {
+				if err := c.serveWithBase(pageComponent, w, r); err != nil {
+					return fmt.Errorf("controller.ProjectList: %w", err)
+				}
+			} else if err := pageComponent.Render(context.Background(), w); err != nil {
+				return fmt.Errorf("controller.ProjectList: %w", err)
+			}
+			return nil
+		}
+	case "serie":
+		if prompt == "" {
+			param := persistence.SerieListQueryParam{}
+			if sPage := urlQuery.Get("page"); sPage != "" {
+				nPage, err := strconv.ParseInt(sPage, 10, strconv.IntSize)
+				if err != nil {
+					return fmt.Errorf("controller.SerieList: %w", err)
+				} else if nPage < 0 {
+					nPage = 0
+				}
+				param.Page = int(nPage)
+			}
+			if sLimit := urlQuery.Get("limit"); sLimit != "" {
+				nLimit, err := strconv.ParseInt(sLimit, 10, strconv.IntSize)
+				if err != nil {
+					return fmt.Errorf("controller.SerieList: %w", err)
+				} else if nLimit < 0 {
+					nLimit = dEFAULT_PAGE_SIZE
+				}
+				param.Limit = int(nLimit)
+			}
+
+			serieList, err := c.service.SerieList(param)
+			if err != nil {
+				return fmt.Errorf("controller<Controller.SerieList>: %w", err)
+			}
+
+			pageComponent := page.Series(serieList)
+			if !c.isAppRequest(r) {
+				if err := c.serveWithBase(pageComponent, w, r); err != nil {
+					return fmt.Errorf("controller.SerieList: %w", err)
+				}
+			} else if err := pageComponent.Render(context.Background(), w); err != nil {
+				return fmt.Errorf("controller.SerieList: %w", err)
+			}
+			return nil
+		}
+	}
+	return oops.BadRequest{}
 }

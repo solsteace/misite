@@ -4,35 +4,112 @@ import "github.com/solsteace/misite/internal/entity"
 import "fmt"
 
 templ SerieList(serieList []entity.SerieList) {
-    <div class="lyt__1x2 lyt__1x2--1-3 exploration" >
+    <div 
+        id="serieListPage"
+        class="lyt__1x2 lyt__1x2--1-3 exploration" 
+        x-data="serieList"
+    >
         <div class="exploration__tools">
             <section> SEARCH FUNCTIONALITY HERE </section>
         </div>
-        <div class="cmp__list exploration__entries">
-            for idx, sl := range serieList {
-                <div 
-                    if sl.IsNew() {
-                        class="exploration__entry exploration__entry--new "
-                    } else {
-                        class="exploration__entry"
-                    }
-                >
-                    <div class="exploration__entry-title">
-                        <a 
-                            class="u__h--3"
-                            href={fmt.Sprintf("/serie/%d", sl.Id)}
-                            hx-get={fmt.Sprintf("/serie/%d", sl.Id)}
-                            hx-trigger="click"
-                            hx-target="#page"
-                        > {sl.Name} </a>
-                    </div>
-                    <p> {sl.Description} </p>
-                </div>
 
-                if idx < len(serieList) - 1 {
-                    <div class="cmp__list-delimiter"> </div>
+        <section>
+            <div 
+                id="exploration__list"
+                class="cmp__list exploration__entries"
+                if nSerie := len(serieList); nSerie > 0 {
+                    x-data={fmt.Sprintf(
+                        "{lastItem: %d}",
+                        serieList[nSerie - 1].Id)}
                 }
-            }
-        </div>
+            > 
+                @Series(serieList)
+            </div>
+            <div class="exploration__expand">
+                <button
+                    x-show="!endOfResult"
+                    :hx-post="`/search?cat=serie&page=${$data.page + 1}`"
+                    hx-target="#exploration__list"
+                    hx-swap="beforeend"
+                    hx-replace-url="false"
+                    hx-push-url="false"
+                > Load more </button>
+                <p x-show="endOfResult" > No more items! </p>
+            </div>
+        </section>
     </div>
+}
+
+templ Series(serieList []entity.SerieList) {
+    for idx, sl := range serieList {
+        <div 
+            if sl.IsNew() {
+                class="exploration__entry exploration__entry--new "
+            } else {
+                class="exploration__entry"
+            }
+
+            if idx == len(serieList) - 1 {
+                x-init={fmt.Sprintf("onLastItem(%d)", sl.Id)}
+            }
+        >
+            <div class="exploration__entry-title">
+                <a 
+                    class="u__h--3"
+                    href={fmt.Sprintf("/serie/%d", sl.Id)}
+                    hx-get={fmt.Sprintf("/serie/%d", sl.Id)}
+                    hx-trigger="click"
+                    hx-target="#page"
+                > {sl.Name} </a>
+            </div>
+            <p> {sl.Description} </p>
+        </div>
+
+        <div class="cmp__list-delimiter"> </div>
+    }
+}
+
+templ SerieListScript() {
+    <script> (() => {
+        const searchPath = "/search?cat=serie"
+        document.addEventListener('alpine:init', (e) => {
+            Alpine.data('serieList', () => ({
+                prompt:'',
+                page: 1,
+                lastItem: 0,
+                endOfResult: false,
+                onEndOfResult() {
+                    this.endOfResult = true
+                }, 
+                onExpand() {
+                    this.page++
+                },
+                onLastItem(lastItemId) {
+                    this.lastItem = lastItemId
+                },
+            }))
+        })
+
+        document.body.addEventListener('htmx:beforeSwap', (e) => {
+            const req = e.detail.xhr
+            const resUrl = new URL(req.responseURL)
+            const resUrlParams = resUrl.searchParams
+            const isMyRequest = `${resUrl.pathname}?cat=${resUrlParams.get("cat")}` == searchPath
+            if(!isMyRequest) {
+                return
+            }
+
+            const prop = Alpine.$data(document.getElementById("serieListPage")) // Undocumented, see: https://github.com/alpinejs/alpine/issues/203
+            if(req.status != 200) {
+                e.preventDefault(); return
+            } else if(!req.responseText) {
+                prop.onEndOfResult()
+                e.preventDefault(); return
+            }
+            prop.onExpand()
+            Alpine.nextTick(() => {
+                htmx.process(e.detail.requestConfig.elt)
+            })
+        })
+    })() </script>
 }

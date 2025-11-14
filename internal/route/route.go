@@ -27,6 +27,7 @@ func (r Router) UseOn(parent *chi.Mux) {
 			"/static/",
 			http.FileServer(http.Dir("./static"))).ServeHTTP)
 
+	router.Post("/search", reqres.HttpHandlerWithError(r.handler.Search))
 	router.Get("/project/{id}", reqres.HttpHandlerWithError(r.handler.Project))
 	router.Get("/article/{id}", reqres.HttpHandlerWithError(r.handler.Article))
 	router.Get("/serie/{id}", reqres.HttpHandlerWithError(r.handler.Serie))
