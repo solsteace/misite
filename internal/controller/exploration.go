@@ -16,15 +16,6 @@ func (c Controller) ArticleList(w http.ResponseWriter, r *http.Request) error {
 	urlQuery := r.URL.Query()
 	param := persistence.ArticlesQueryParam{}
 	if c.isAppRequest(r) {
-		if sPage := urlQuery.Get("page"); sPage != "" {
-			nPage, err := strconv.ParseInt(sPage, 10, strconv.IntSize)
-			if err != nil {
-				return fmt.Errorf("controller.ArticleList: %w", err)
-			} else if nPage < 0 {
-				nPage = 0
-			}
-			param.Page = int(nPage)
-		}
 		if sLimit := urlQuery.Get("limit"); sLimit != "" {
 			nLimit, err := strconv.ParseInt(sLimit, 10, strconv.IntSize)
 			if err != nil {
@@ -81,15 +72,6 @@ func (c Controller) ProjectList(w http.ResponseWriter, r *http.Request) error {
 	urlQuery := r.URL.Query()
 	param := persistence.ProjectsQueryParam{}
 	if c.isAppRequest(r) {
-		if sPage := urlQuery.Get("page"); sPage != "" {
-			nPage, err := strconv.ParseInt(sPage, 10, strconv.IntSize)
-			if err != nil {
-				return fmt.Errorf("controller.ProjectList: %w", err)
-			} else if nPage < 0 {
-				nPage = 0
-			}
-			param.Page = int(nPage)
-		}
 		if sLimit := urlQuery.Get("limit"); sLimit != "" {
 			nLimit, err := strconv.ParseInt(sLimit, 10, strconv.IntSize)
 			if err != nil {
@@ -138,15 +120,6 @@ func (c Controller) SerieList(w http.ResponseWriter, r *http.Request) error {
 	urlQuery := r.URL.Query()
 	param := persistence.SerieListQueryParam{}
 	if c.isAppRequest(r) {
-		if sPage := urlQuery.Get("page"); sPage != "" {
-			nPage, err := strconv.ParseInt(sPage, 10, strconv.IntSize)
-			if err != nil {
-				return fmt.Errorf("controller.SerieList: %w", err)
-			} else if nPage < 0 {
-				nPage = 0
-			}
-			param.Page = int(nPage)
-		}
 		if sLimit := urlQuery.Get("limit"); sLimit != "" {
 			nLimit, err := strconv.ParseInt(sLimit, 10, strconv.IntSize)
 			if err != nil {
@@ -156,6 +129,7 @@ func (c Controller) SerieList(w http.ResponseWriter, r *http.Request) error {
 			}
 			param.Limit = int(nLimit)
 		}
+		param.Last = urlQuery.Get("last")
 	}
 
 	serieList, err := c.service.SerieList(param)

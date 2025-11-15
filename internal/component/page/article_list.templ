@@ -4,8 +4,6 @@ import "github.com/solsteace/misite/internal/entity"
 import "fmt"
 import "github.com/solsteace/misite/internal/utility/api"
 
-var articleButtonOnce = templ.NewOnceHandle()
-
 templ ArticleList(article []entity.ArticleList, topTagsQuery string) {
     <div 
         id="articleListPage"
@@ -60,11 +58,12 @@ templ ArticleList(article []entity.ArticleList, topTagsQuery string) {
             <div class="exploration__expand">
                 <button
                     x-show="!endOfResult"
-                    :hx-post="`/search?cat=article&page=${$data.page + 1}`"
+                    :hx-post="$data.next"
                     hx-target="#exploration__list"
                     hx-swap="beforeend"
                     hx-replace-url="false"
                     hx-push-url="false"
+                    id="exploration__expand-button"
                 > Load more </button>
                 <p x-show="endOfResult" > No more items! </p>
             </div>
@@ -84,7 +83,7 @@ templ Articles(article []entity.ArticleList) {
             }
 
             if idx == len(article) - 1 {
-                x-init={fmt.Sprintf("onLastItem(%d)", a.Id)}
+                x-init={fmt.Sprintf("onLastItem('%d-%d')", a.UpdatedAt.UnixNano(), a.Id)}
             }
         >
             <div class="exploration__entry-title">
@@ -138,21 +137,19 @@ templ Articles(article []entity.ArticleList) {
 
 templ ArticleListScript() {
     <script> (() => {
-        const searchPath = "/search?cat=article"
         document.addEventListener('alpine:init', (e) => {
             Alpine.data('articleList', () => ({
                 prompt:'',
-                page: 1,
-                lastItem: 0,
+                next: '',
                 endOfResult: false,
                 onEndOfResult() {
                     this.endOfResult = true
                 }, 
-                onExpand() {
-                    this.page++
-                },
-                onLastItem(lastItemId) {
-                    this.lastItem = lastItemId
+                onLastItem(lastItem) {
+                    this.next = `/search?cat=article&last=${lastItem}`
+                    Alpine.nextTick(() => {
+                        htmx.process(document.getElementById("exploration__expand-button"))
+                    })
                 },
             }))
         })
@@ -161,7 +158,7 @@ templ ArticleListScript() {
             const req = e.detail.xhr
             const resUrl = new URL(req.responseURL)
             const resUrlParams = resUrl.searchParams
-            const isMyRequest = `${resUrl.pathname}?cat=${resUrlParams.get("cat")}` == searchPath
+            const isMyRequest = `${resUrl.pathname}?cat=${resUrlParams.get("cat")}` == "/search?cat=article"
             if(!isMyRequest) {
                 return
             }
@@ -173,10 +170,6 @@ templ ArticleListScript() {
                 prop.onEndOfResult()
                 e.preventDefault(); return
             }
-            prop.onExpand()
-            Alpine.nextTick(() => {
-                htmx.process(e.detail.requestConfig.elt)
-            })
         })
     })() </script>
 }

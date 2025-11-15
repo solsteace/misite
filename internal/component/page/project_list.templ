@@ -8,7 +8,7 @@ templ ProjectList(project []entity.ProjectList, topTagsQuery string) {
     <div 
         id="projectListPage"
         class="lyt__1x2 lyt__1x2--1-3 exploration"
-        x-data="ProjectList"
+        x-data="projectList"
     >
         <div class="exploration__tools"> 
             <section> SEARCH FUNCTIONALITY HERE </section>
@@ -40,11 +40,12 @@ templ ProjectList(project []entity.ProjectList, topTagsQuery string) {
             <div class="exploration__expand">
                 <button
                     x-show="!endOfResult"
-                    :hx-post="`/search?cat=project&page=${$data.page + 1}`"
+                    :hx-post="$data.next"
                     hx-target="#exploration__list"
                     hx-swap="beforeend"
                     hx-replace-url="false"
                     hx-push-url="false"
+                    id="exploration__expand-button"
                 > Load more </button>
                 <p x-show="endOfResult" > No more items! </p>
             </div>
@@ -64,7 +65,7 @@ templ Projects(project []entity.ProjectList) {
             }
 
             if idx == len(project) - 1 {
-                x-init={fmt.Sprintf("onLastItem(%d)", p.Id)}
+                x-init={fmt.Sprintf("onLastItem('%d-%d')", p.UpdatedAt.UnixNano(), p.Id)}
             }
         >
             <div class="exploration__entry-title">
@@ -119,21 +120,19 @@ templ Projects(project []entity.ProjectList) {
 
 templ ProjectListScript() {
     <script> (() => {
-        const searchPath = "/search?cat=project"
         document.addEventListener('alpine:init', (e) => {
-            Alpine.data('ProjectList', () => ({
+            Alpine.data('projectList', () => ({
                 prompt:'',
-                page: 1,
-                lastItem: 0,
+                next: '',
                 endOfResult: false,
                 onEndOfResult() {
                     this.endOfResult = true
                 }, 
-                onExpand() {
-                    this.page++
-                },
-                onLastItem(lastItemId) {
-                    this.lastItem = lastItemId
+                onLastItem(lastItem) {
+                    this.next = `/search?cat=project&last=${lastItem}`
+                    Alpine.nextTick(() => {
+                        htmx.process(document.getElementById("exploration__expand-button"))
+                    })
                 },
             }))
         })
@@ -142,7 +141,7 @@ templ ProjectListScript() {
             const req = e.detail.xhr
             const resUrl = new URL(req.responseURL)
             const resUrlParams = resUrl.searchParams
-            const isMyRequest = `${resUrl.pathname}?cat=${resUrlParams.get("cat")}` == searchPath
+            const isMyRequest = `${resUrl.pathname}?cat=${resUrlParams.get("cat")}` == "/search?cat=project"
             if(!isMyRequest) {
                 return
             }
@@ -154,10 +153,6 @@ templ ProjectListScript() {
                 prop.onEndOfResult()
                 e.preventDefault(); return
             }
-            prop.onExpand()
-            Alpine.nextTick(() => {
-                htmx.process(e.detail.requestConfig.elt)
-            })
         })
     })() </script>
 }

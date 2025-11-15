@@ -22,15 +22,6 @@ func (c Controller) Search(w http.ResponseWriter, r *http.Request) error {
 	case "article":
 		if prompt == "" {
 			param := persistence.ArticlesQueryParam{}
-			if sPage := urlQuery.Get("page"); sPage != "" {
-				nPage, err := strconv.ParseInt(sPage, 10, strconv.IntSize)
-				if err != nil {
-					return fmt.Errorf("controller.Search: %w", err)
-				} else if nPage < 0 {
-					nPage = 0
-				}
-				param.Page = int(nPage)
-			}
 			if sLimit := urlQuery.Get("limit"); sLimit != "" {
 				nLimit, err := strconv.ParseInt(sLimit, 10, strconv.IntSize)
 				if err != nil {
@@ -40,6 +31,7 @@ func (c Controller) Search(w http.ResponseWriter, r *http.Request) error {
 				}
 				param.Limit = int(nLimit)
 			}
+			param.Last = urlQuery.Get("last")
 
 			articles, err := c.service.Articles(param)
 			if err != nil {
@@ -59,15 +51,6 @@ func (c Controller) Search(w http.ResponseWriter, r *http.Request) error {
 	case "project":
 		if prompt == "" {
 			param := persistence.ProjectsQueryParam{}
-			if sPage := urlQuery.Get("page"); sPage != "" {
-				nPage, err := strconv.ParseInt(sPage, 10, strconv.IntSize)
-				if err != nil {
-					return fmt.Errorf("controller.ProjectList: %w", err)
-				} else if nPage < 0 {
-					nPage = 0
-				}
-				param.Page = int(nPage)
-			}
 			if sLimit := urlQuery.Get("limit"); sLimit != "" {
 				nLimit, err := strconv.ParseInt(sLimit, 10, strconv.IntSize)
 				if err != nil {
@@ -77,6 +60,7 @@ func (c Controller) Search(w http.ResponseWriter, r *http.Request) error {
 				}
 				param.Limit = int(nLimit)
 			}
+			param.Last = urlQuery.Get("last")
 
 			projects, err := c.service.Projects(param)
 			if err != nil {
@@ -96,15 +80,7 @@ func (c Controller) Search(w http.ResponseWriter, r *http.Request) error {
 	case "serie":
 		if prompt == "" {
 			param := persistence.SerieListQueryParam{}
-			if sPage := urlQuery.Get("page"); sPage != "" {
-				nPage, err := strconv.ParseInt(sPage, 10, strconv.IntSize)
-				if err != nil {
-					return fmt.Errorf("controller.SerieList: %w", err)
-				} else if nPage < 0 {
-					nPage = 0
-				}
-				param.Page = int(nPage)
-			}
+			param.Last = urlQuery.Get("last")
 			if sLimit := urlQuery.Get("limit"); sLimit != "" {
 				nLimit, err := strconv.ParseInt(sLimit, 10, strconv.IntSize)
 				if err != nil {

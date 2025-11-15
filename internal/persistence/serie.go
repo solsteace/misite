@@ -2,22 +2,45 @@ package persistence
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/solsteace/misite/internal/entity"
 )
 
 type SerieListQueryParam struct {
-	Page  int
+	Last  string
 	Limit int
 }
 
 func (p Pg) SerieList(param SerieListQueryParam) ([]entity.SerieList, error) {
-	if param.Limit < 1 {
-		param.Limit = 10
+	query := `
+		SELECT
+			id,
+			name,
+			description,
+			created_at
+		FROM series
+		WHERE id > $1 AND created_at >= $2
+		ORDER BY 
+			created_at DESC,
+			id
+		LIMIT $3`
+	args := []any{
+		0,               // $1 -> lastId
+		time.Unix(0, 0), // $2 -> lastTime
+		10}              // $3 -> limit
+	if tokens := strings.Split(param.Last, "-"); len(tokens) == 2 {
+		if lastId, err := strconv.ParseInt(tokens[1], 10, strconv.IntSize); err == nil {
+			args[0] = lastId
+		}
+		if lastTime, err := strconv.ParseInt(tokens[0], 10, strconv.IntSize); err == nil {
+			args[1] = time.Unix(0, lastTime)
+		}
 	}
-	if param.Page < 1 {
-		param.Page = 1
+	if param.Limit > 0 {
+		args[2] = param.Limit
 	}
 
 	var rows []struct {
@@ -26,18 +49,6 @@ func (p Pg) SerieList(param SerieListQueryParam) ([]entity.SerieList, error) {
 		Description string    `db:"description"`
 		CreatedAt   time.Time `db:"created_at"`
 	}
-	query := `
-		SELECT
-			series.id,
-			series.name,
-			series.description,
-			series.created_at
-		FROM series
-		ORDER BY series.created_at
-		LIMIT $1 OFFSET $2`
-	args := []any{
-		param.Limit,
-		(param.Page - 1) * param.Limit}
 	if err := p.db.Select(&rows, query, args...); err != nil {
 		return []entity.SerieList{}, fmt.Errorf(
 			"persistence<Pg.Series>: %w", err)

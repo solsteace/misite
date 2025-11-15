@@ -3,6 +3,8 @@ package persistence
 import (
 	"database/sql"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/solsteace/misite/internal/entity"
@@ -10,37 +12,50 @@ import (
 )
 
 type ProjectsQueryParam struct {
-	Page  int
 	Limit int
+	Last  string
 	TagId []int
 }
 
 func (p Pg) Projects(param ProjectsQueryParam) ([]entity.ProjectList, error) {
 	query := `
-		WITH matching_projects_by_tag AS(
-			SELECT 
-				project_id, 
-				COUNT(DISTINCT tag_id) AS "n_tag"
-			FROM project_tags
-			WHERE 
-				($1::int[] IS NULL)
-				OR tag_id = ANY($1)
-			GROUP BY project_id
-			HAVING
-				($1::int[] IS NULL)
-				OR COUNT(tag_id) = CARDINALITY($1)
-			LIMIT $2 OFFSET $3)
+		WITH 
+			projects_in_range AS (
+				SELECT 
+					*, 
+					ROW_NUMBER() OVER (
+						ORDER BY 
+							updated_at DESC,
+							id
+					) AS "order"
+				FROM projects
+				WHERE id > $2 AND updated_at >= $3
+				LIMIT $4
+			),
+			matching_projects_by_tag AS(
+				SELECT 
+					project_id, 
+					COUNT(DISTINCT tag_id) AS "n_tag"
+				FROM project_tags
+				WHERE 
+					($1::int[] IS NULL)
+					OR tag_id = ANY($1)
+				GROUP BY project_id
+				HAVING
+					($1::int[] IS NULL)
+					OR COUNT(tag_id) = CARDINALITY($1)
+				LIMIT $4)
 		SELECT
-			projects.id AS "id",
-			projects.name AS "name",
-			projects.synopsis AS "synopsis",
-			projects.created_at AS "created_at",
-			projects.updated_at AS "updated_at",
+			projects.id,
+			projects.name,
+			projects.synopsis,
+			projects.created_at,
+			projects.updated_at,
 			tags.id AS "tag.id",
 			tags.name AS "tag.name",
 			series.id AS "serie.id",
 			series.name AS "serie.name"
-		FROM projects
+		FROM projects_in_range AS projects
 		LEFT JOIN series ON projects.devblog_serie = series.id
 		LEFT JOIN project_tags ON project_tags.project_id = projects.id
 		LEFT JOIN tags ON project_tags.tag_id = tags.id
@@ -48,19 +63,25 @@ func (p Pg) Projects(param ProjectsQueryParam) ([]entity.ProjectList, error) {
 			(SELECT true
 			FROM matching_projects_by_tag
 			WHERE matching_projects_by_tag.project_id = projects.id)
-		ORDER BY projects.updated_at`
-	if param.Limit < 1 {
-		param.Limit = 10
-	}
-	if param.Page < 1 {
-		param.Page = 1
-	}
+		ORDER BY projects."order"`
 	args := []any{
-		nil,
-		param.Limit,
-		(param.Page - 1) * param.Limit}
+		nil,             // $1 -> tag filter
+		0,               // $2 -> lastId
+		time.Unix(0, 0), // $3 -> lastTime
+		10}              // $4 -> limit
 	if len(param.TagId) > 0 {
 		args[0] = param.TagId
+	}
+	if tokens := strings.Split(param.Last, "-"); len(tokens) == 2 {
+		if lastId, err := strconv.ParseInt(tokens[1], 10, strconv.IntSize); err == nil {
+			args[1] = lastId
+		}
+		if lastTime, err := strconv.ParseInt(tokens[0], 10, strconv.IntSize); err == nil {
+			args[2] = time.Unix(0, lastTime)
+		}
+	}
+	if param.Limit > 0 {
+		args[3] = param.Limit
 	}
 
 	var rows []struct {

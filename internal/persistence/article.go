@@ -3,6 +3,8 @@ package persistence
 import (
 	"database/sql"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/solsteace/misite/internal/entity"
@@ -10,8 +12,8 @@ import (
 )
 
 type ArticlesQueryParam struct {
-	Page    int
 	Limit   int
+	Last    string
 	TagId   []int
 	SerieId []int
 }
@@ -19,6 +21,18 @@ type ArticlesQueryParam struct {
 func (p Pg) Articles(param ArticlesQueryParam) ([]entity.ArticleList, error) {
 	query := `
 		WITH 
+			articles_in_range AS (
+				SELECT 
+					*, 
+					ROW_NUMBER() OVER (
+						ORDER BY 
+							updated_at DESC,
+							id
+					) AS "order"
+				FROM articles
+				WHERE id > $3 AND updated_at >= $4
+				LIMIT $5
+			),
 			matching_articles_by_tag AS ( 
 				SELECT 
 					article_id, 
@@ -28,21 +42,20 @@ func (p Pg) Articles(param ArticlesQueryParam) ([]entity.ArticleList, error) {
 					($1::int[] IS NULL) 
 					OR tag_id = ANY($1)
 				GROUP BY article_id
-				HAVING
-					($1::int[] IS NULL)
-					OR COUNT(tag_id) = CARDINALITY($1)
-				LIMIT $3 OFFSET $4)
+				HAVING 
+					($1::int[] IS NULL) 
+					OR COUNT(tag_id) = CARDINALITY($1))
 		SELECT
-			articles.id AS "id",
-			articles.title AS "title",
-			articles.subtitle AS "subtitle",
-			articles.created_at AS "created_at",
-			articles.updated_at AS "updated_at",
+			articles.id,
+			articles.title,
+			articles.subtitle,
+			articles.created_at,
+			articles.updated_at,
 			tags.id AS "tag.id",
 			tags.name AS "tag.name",
 			series.id AS "serie.id",
 			series.name AS "serie.name"
-		FROM articles
+		FROM articles_in_range AS articles
 		LEFT JOIN article_tags ON article_tags.article_id = articles.id
 		LEFT JOIN tags ON article_tags.tag_id = tags.id
 		LEFT JOIN series ON articles.serie_id = series.id
@@ -51,23 +64,29 @@ func (p Pg) Articles(param ArticlesQueryParam) ([]entity.ArticleList, error) {
 				FROM matching_articles_by_tag
 				WHERE matching_articles_by_tag.article_id = articles.id)
 			AND ($2::int[] IS NULL OR articles.serie_id = ANY($2))
-		ORDER BY articles.updated_at DESC`
-	if param.Limit < 1 {
-		param.Limit = 10
-	}
-	if param.Page < 1 {
-		param.Page = 1
-	}
+		ORDER BY articles."order"`
 	args := []any{
-		nil,
-		nil,
-		param.Limit,
-		(param.Page - 1) * param.Limit}
+		nil,             // $1 -> tag filter
+		nil,             // $2 -> serie filter
+		0,               // $3 -> lastId
+		time.Unix(0, 0), // $4 -> lastTime
+		10}              // $5 -> limit
 	if len(param.TagId) > 0 {
 		args[0] = param.TagId
 	}
 	if len(param.SerieId) > 0 {
 		args[1] = param.SerieId
+	}
+	if tokens := strings.Split(param.Last, "-"); len(tokens) == 2 {
+		if lastId, err := strconv.ParseInt(tokens[1], 10, strconv.IntSize); err == nil {
+			args[2] = lastId
+		}
+		if lastTime, err := strconv.ParseInt(tokens[0], 10, strconv.IntSize); err == nil {
+			args[3] = time.Unix(0, lastTime)
+		}
+	}
+	if param.Limit > 0 {
+		args[4] = param.Limit
 	}
 
 	var rows []struct {
