@@ -163,6 +163,29 @@ button {
 }
 
 
+.cmp__icon {
+    cursor: pointer;
+}
+.cmp__icon > * {
+    stroke: var(--primary-color-sw1);
+    transition: 0.3s stroke;
+}
+.cmp__icon:hover > * {
+    stroke: var(--secondary-color);
+}
+.cmp__icon-search > *{
+    transform: scale(1);
+    transition: 0.2s transform;
+    transition-timing-function: ease-out;
+}
+.cmp__icon-search > *:nth-child(1) {
+    transition-delay: 0.1s;
+}
+.cmp__icon-search:hover > * {
+    transform: scale(1.1);
+}
+
+
 
 /* ====================
     Utilities (u)
@@ -275,34 +298,43 @@ h5, .u__h--5 {
 .exploration__tools {
     display: flex;
     flex-direction: column;
-    gap: var(--gap-small);
+    gap: var(--gap-medium);
 }
 .exploration__search {
     display: flex;
     flex-direction: column;
-    gap:var(--gap-tiny);
+    gap: var(--gap-tiny);
 }
-.exploration__search > form {
+.exploration__search-alternative a,
+.exploration__search-alternative p {
+    font-size: 0.875rem;
+}
+.exploration__search-alternative a {
+    text-decoration: underline;
+}
+.exploration__search-input {
     display: flex;
+    border-bottom: 1px solid var(--primary-color-sw1);
 }
-.exploration__search > form > input {
+.exploration__search-input:focus-within {
+    border-bottom: 1px solid var(--secondary-color);
+}
+.exploration__search-input > input {
+    flex: 1;
+    border-width: 0px 0px 0px 0px;
     outline: none;
     padding: var(--gap-tiny) 0px var(--gap-tiny) var(--gap-tiny);
-    flex: 1;
     background-color: var(--bg-color);
-    border: 1px solid var(--primary-color-sw1);
 }
-.exploration__search > form > button {
-    color: var(--bg-color);
-    border: 1px solid var(--primary-color-sw1);
-    background-color: var(--primary-color-sw1);
+.exploration__search-input > button {
+    border: 0px solid white;
+    background-color: var(--col-transparent);
 }
 .exploration__entries > .cmp__list-delimiter {
     border-bottom: 0px;
     padding: var(--gap-small) 0px;
 }
 .exploration__expand {
-    margin-top: var(--gap-medium);
     display: flex;
     justify-content: center;
 }
@@ -320,6 +352,25 @@ h5, .u__h--5 {
 .exploration__expand--finish > button{
     pointer-events: none;
 }
+.exploration__highlight {
+    top: calc(3* var(--gap-large));
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-small);
+}
+.exploration__highlight-entries {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-medium);
+}
+.exploration__highlight-entries > * {
+    font-size: 0.875rem;
+}
+.exploration__highlight-entries > *:hover{
+    color: var(--secondary-color);
+    cursor: pointer;
+}
+
 
 
 .specification {

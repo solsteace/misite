@@ -14,74 +14,79 @@ import (
 type ProjectsQueryParam struct {
 	Limit int
 	Last  string
-	TagId []int
+	Tag   []string
+	Serie []string
 }
 
 func (p Pg) Projects(param ProjectsQueryParam) ([]entity.ProjectList, error) {
 	query := `
-		WITH 
-			projects_in_range AS (
-				SELECT 
-					*, 
-					ROW_NUMBER() OVER (
-						ORDER BY 
-							updated_at DESC,
-							id
-					) AS "order"
-				FROM projects
-				WHERE id > $2 AND updated_at >= $3
-				LIMIT $4
-			),
-			matching_projects_by_tag AS(
-				SELECT 
-					project_id, 
-					COUNT(DISTINCT tag_id) AS "n_tag"
-				FROM project_tags
-				WHERE 
-					($1::int[] IS NULL)
-					OR tag_id = ANY($1)
-				GROUP BY project_id
-				HAVING
-					($1::int[] IS NULL)
-					OR COUNT(tag_id) = CARDINALITY($1)
-				LIMIT $4)
 		SELECT
-			projects.id,
-			projects.name,
-			projects.synopsis,
-			projects.created_at,
-			projects.updated_at,
-			tags.id AS "tag.id",
-			tags.name AS "tag.name",
-			series.id AS "serie.id",
-			series.name AS "serie.name"
-		FROM projects_in_range AS projects
-		LEFT JOIN series ON projects.devblog_serie = series.id
+		   	projects.id,
+		   	projects.name,
+		   	projects.synopsis,
+		   	projects.created_at,
+		   	projects.updated_at,
+		   	tags.id AS "tag.id",
+		   	tags.name AS "tag.name",
+		   	series.id AS "serie.id",
+		   	series.name AS "serie.name"
+		FROM (
+			SELECT *
+			FROM projects
+			WHERE
+				id > $1
+				AND updated_at >= $2
+				AND ($4::VARCHAR[] IS NULL
+					OR EXISTS (
+						SELECT 1
+						FROM project_tags
+						JOIN tags ON project_tags.tag_id = tags.id
+						WHERE
+							project_tags.project_id = projects.id
+							AND LOWER(tags.name) = ANY($4)
+						GROUP BY project_id
+						HAVING COUNT(DISTINCT tag_id) = CARDINALITY($4)))
+				AND ($5::VARCHAR[] IS NULL
+					OR EXISTS (
+						SELECT 1
+						FROM projects AS temp_projects
+						JOIN series ON series.id = projects.devblog_serie
+						WHERE 
+							temp_projects.id = projects.id
+							AND LOWER(series.name) = ANY($5)))
+			ORDER BY
+				updated_at DESC,
+				id
+			LIMIT $3
+		) AS projects
 		LEFT JOIN project_tags ON project_tags.project_id = projects.id
 		LEFT JOIN tags ON project_tags.tag_id = tags.id
-		WHERE
-			(SELECT true
-			FROM matching_projects_by_tag
-			WHERE matching_projects_by_tag.project_id = projects.id)
-		ORDER BY projects."order"`
+		LEFT JOIN series ON projects.devblog_serie = series.id
+		ORDER BY 
+			projects.updated_at DESC, 
+			id`
 	args := []any{
-		nil,             // $1 -> tag filter
-		0,               // $2 -> lastId
-		time.Unix(0, 0), // $3 -> lastTime
-		10}              // $4 -> limit
-	if len(param.TagId) > 0 {
-		args[0] = param.TagId
-	}
+		0,               // $1 -> lastId
+		time.Unix(0, 0), // $2 -> lastTime
+		10,              // $3 -> limit
+		nil,             // $4 -> tagList
+		nil}             // $5 -> serieList
 	if tokens := strings.Split(param.Last, "-"); len(tokens) == 2 {
 		if lastId, err := strconv.ParseInt(tokens[1], 10, strconv.IntSize); err == nil {
-			args[1] = lastId
+			args[0] = lastId
 		}
 		if lastTime, err := strconv.ParseInt(tokens[0], 10, strconv.IntSize); err == nil {
-			args[2] = time.Unix(0, lastTime)
+			args[1] = time.Unix(0, lastTime)
 		}
 	}
 	if param.Limit > 0 {
-		args[3] = param.Limit
+		args[2] = param.Limit
+	}
+	if len(param.Tag) > 0 {
+		args[3] = param.Tag
+	}
+	if len(param.Serie) > 0 {
+		args[4] = param.Serie
 	}
 
 	var rows []struct {

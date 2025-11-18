@@ -10,6 +10,7 @@ import (
 )
 
 type SerieListQueryParam struct {
+	Title string
 	Last  string
 	Limit int
 }
@@ -22,7 +23,10 @@ func (p Pg) SerieList(param SerieListQueryParam) ([]entity.SerieList, error) {
 			description,
 			created_at
 		FROM series
-		WHERE id > $1 AND created_at >= $2
+		WHERE 
+			id > $1 
+			AND created_at >= $2
+			AND LOWER(name) LIKE $4
 		ORDER BY 
 			created_at DESC,
 			id
@@ -30,7 +34,8 @@ func (p Pg) SerieList(param SerieListQueryParam) ([]entity.SerieList, error) {
 	args := []any{
 		0,               // $1 -> lastId
 		time.Unix(0, 0), // $2 -> lastTime
-		10}              // $3 -> limit
+		10,              // $3 -> limit
+		"%%"}            // $4 -> title
 	if tokens := strings.Split(param.Last, "-"); len(tokens) == 2 {
 		if lastId, err := strconv.ParseInt(tokens[1], 10, strconv.IntSize); err == nil {
 			args[0] = lastId
@@ -42,7 +47,11 @@ func (p Pg) SerieList(param SerieListQueryParam) ([]entity.SerieList, error) {
 	if param.Limit > 0 {
 		args[2] = param.Limit
 	}
+	if param.Title != "" {
+		args[3] = "%" + param.Title + "%"
+	}
 
+	fmt.Println(args)
 	var rows []struct {
 		Id          int       `db:"id"`
 		Name        string    `db:"name"`

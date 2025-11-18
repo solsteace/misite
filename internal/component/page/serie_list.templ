@@ -10,7 +10,51 @@ templ SerieList(serieList []entity.SerieList) {
         x-data="serieList"
     >
         <div class="exploration__tools">
-            <section> SEARCH FUNCTIONALITY HERE </section>
+            <section class="exploration__search">
+                <form 
+                    class="exploration__search-input"
+                    @submit.prevent="onSearch"
+                    x-init="$watch('prompt', (_, __) => { htmx.process($el) })"
+                    :hx-get="`/series?search=${encodeURIComponent($data.prompt || ' ')}`"
+                    hx-target="#exploration__list"
+                    hx-swap="innerHTML"
+                    hx-push-url="true"
+                >
+                    <input 
+                        id="serie__search"
+                        type="search"
+                        placeholder="Search something!"
+                        x-model="$data.prompt"
+                        :value="$data.prompt"
+                        />
+                    <button type="submit" > 
+                        <svg 
+                            class="cmp__icon cmp__icon-search" 
+                            viewBox="0 0 24 24" 
+                            width="24" 
+                            height="24"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <circle 
+                                cx="11" 
+                                cy="11" 
+                                r="5" 
+                                stroke="white"
+                                stroke-width="2"
+                                fill="none"
+                            />
+
+                            <line 
+                                x1="16" y1="16" 
+                                x2="21" y2="21" 
+                                stroke="white"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+                    </button> // make SVG magnifying glass
+                </form>
+            </section>
         </div>
 
         <section>
@@ -28,7 +72,7 @@ templ SerieList(serieList []entity.SerieList) {
             <div class="exploration__expand">
                 <button
                     x-show="!endOfResult"
-                    :hx-post="$data.next"
+                    :hx-get="$data.next"
                     hx-target="#exploration__list"
                     hx-swap="beforeend"
                     hx-replace-url="false"
@@ -73,37 +117,56 @@ templ Series(serieList []entity.SerieList) {
 templ SerieListScript() {
     <script> (() => {
         document.addEventListener('alpine:init', (e) => {
-            Alpine.data('serieList', () => ({
-                prompt:'',
-                next: '',
-                endOfResult: false,
-                onEndOfResult() {
-                    this.endOfResult = true
-                }, 
-                onLastItem(lastItem) {
-                    this.next = `/search?cat=serie&last=${lastItem}`
-                    Alpine.nextTick(() => {
-                        htmx.process(document.getElementById("exploration__expand-button"))
-                    })
-                },
-            }))
+            Alpine.data('serieList', () => {
+                const location = new URL(window.location.toString())
+                const isMyRequest = location.pathname == "/series"
+                return {
+                    prompt:"",
+                    activeQuery: isMyRequest
+                        ? (location.searchParams.get("search") ?? "")
+                        : "",
+                    next: "",
+                    endOfResult: false,
+                    setEndOfResult(state) {
+                        this.endOfResult = state
+                    }, 
+                    onLastItem(lastItem) {
+                        this.next = `/series?last=${lastItem}`
+                        if(this.activeQuery) {
+                            this.next += `&search=${this.activeQuery}`
+                        }
+
+                        Alpine.nextTick(() => {
+                            htmx.process(document.getElementById("exploration__expand-button"))
+                        })
+                    },
+                    onSearch() {
+                        this.activeQuery = this.prompt
+                        this.endOfResult = false
+                    }
+                }
+            })
         })
 
         document.body.addEventListener('htmx:beforeSwap', (e) => {
             const req = e.detail.xhr
             const resUrl = new URL(req.responseURL)
-            const resUrlParams = resUrl.searchParams
-            const isMyRequest = `${resUrl.pathname}?cat=${resUrlParams.get("cat")}` == "/search?cat=serie"
-            if(!isMyRequest) {
+            const isMyAjax = `${resUrl.pathname}` == "/series"
+            if(!isMyAjax) {
                 return
-            }
+            } else if(req.status != 200) {
+                e.preventDefault(); return
+            } 
 
-            const prop = Alpine.$data(document.getElementById("serieListPage")) // Undocumented, see: https://github.com/alpinejs/alpine/issues/203
-            if(req.status != 200) {
-                e.preventDefault(); return
-            } else if(!req.responseText) {
-                prop.onEndOfResult()
-                e.preventDefault(); return
+            const params = resUrl.searchParams
+            const isSearchRequest = params.get("last") != ""
+            if(!req.responseText) {
+                if(!isSearchRequest) {
+                    e.preventDefault(); return
+                }
+
+                const prop = Alpine.$data(document.getElementById("serieListPage")) // Undocumented, see: https://github.com/alpinejs/alpine/issues/203
+                prop.setEndOfResult(true)
             }
         })
     })() </script>

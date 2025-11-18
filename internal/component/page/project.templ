@@ -3,6 +3,8 @@ package page
 import "github.com/solsteace/misite/internal/entity"
 import "fmt"
 import "github.com/solsteace/misite/internal/utility/api"
+import "net/url"
+import "strings"
 
 const projectHtmlId = "main-project"
 
@@ -56,10 +58,15 @@ templ Project(project entity.Project) {
                         <li> 
                             <a
                                 class="tag-badge-list__tag"
+                                href= {fmt.Sprintf("%s?search=%s", 
+                                    api.ExploreProjectUrl, url.QueryEscape(
+                                        fmt.Sprintf("tag:%s", strings.ReplaceAll(t.Name, " ", "_"))))} 
+                                hx-get= {fmt.Sprintf("%s?search=%s", 
+                                    api.ExploreProjectUrl, url.QueryEscape(
+                                        fmt.Sprintf("tag:%s", strings.ReplaceAll(t.Name, " ", "_"))))} 
                                 hx-trigger="click consume"
                                 hx-target="#page"
-                                hx-get={fmt.Sprintf("%s?tId=%d", api.ExploreProjectUrl, t.Id)}
-                                href= {fmt.Sprintf("%s?tId=%d", api.ExploreProjectUrl, t.Id)} 
+                                hx-push-url="true"
                             > {t.Name} </a> 
                         </li>
                     }

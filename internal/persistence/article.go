@@ -12,39 +12,14 @@ import (
 )
 
 type ArticlesQueryParam struct {
-	Limit   int
-	Last    string
-	TagId   []int
-	SerieId []int
+	Limit int
+	Last  string
+	Tag   []string
+	Serie []string
 }
 
 func (p Pg) Articles(param ArticlesQueryParam) ([]entity.ArticleList, error) {
 	query := `
-		WITH 
-			articles_in_range AS (
-				SELECT 
-					*, 
-					ROW_NUMBER() OVER (
-						ORDER BY 
-							updated_at DESC,
-							id
-					) AS "order"
-				FROM articles
-				WHERE id > $3 AND updated_at >= $4
-				LIMIT $5
-			),
-			matching_articles_by_tag AS ( 
-				SELECT 
-					article_id, 
-					COUNT(DISTINCT tag_id) AS "n_tag"
-				FROM article_tags
-				WHERE 
-					($1::int[] IS NULL) 
-					OR tag_id = ANY($1)
-				GROUP BY article_id
-				HAVING 
-					($1::int[] IS NULL) 
-					OR COUNT(tag_id) = CARDINALITY($1))
 		SELECT
 			articles.id,
 			articles.title,
@@ -55,38 +30,64 @@ func (p Pg) Articles(param ArticlesQueryParam) ([]entity.ArticleList, error) {
 			tags.name AS "tag.name",
 			series.id AS "serie.id",
 			series.name AS "serie.name"
-		FROM articles_in_range AS articles
+		FROM (
+			SELECT *
+			FROM articles
+			WHERE
+				id > $1 
+				AND updated_at >= $2
+				AND ($4::VARCHAR[] IS NULL
+					OR EXISTS (
+						SELECT 1
+						FROM article_tags
+						JOIN tags ON article_tags.tag_id = tags.id
+						WHERE 
+							article_tags.article_id = articles.id
+							AND LOWER(tags.name) = ANY($4)
+						GROUP BY article_id
+						HAVING COUNT(DISTINCT tag_id) = CARDINALITY($4)))
+				AND ($5::VARCHAR[] IS NULL 
+					OR EXISTS(
+						SELECT 1
+						FROM articles AS temp_articles
+						JOIN series ON series.id = articles.serie_id
+						WHERE
+							temp_articles.id = articles.id
+							AND LOWER(series.name) = ANY($5)))
+			ORDER BY
+				updated_at DESC,
+				id
+			LIMIT $3
+		) AS articles
 		LEFT JOIN article_tags ON article_tags.article_id = articles.id
 		LEFT JOIN tags ON article_tags.tag_id = tags.id
 		LEFT JOIN series ON articles.serie_id = series.id
-		WHERE 
-			(SELECT true
-				FROM matching_articles_by_tag
-				WHERE matching_articles_by_tag.article_id = articles.id)
-			AND ($2::int[] IS NULL OR articles.serie_id = ANY($2))
-		ORDER BY articles."order"`
+		ORDER BY 
+			articles.updated_at DESC, 
+			id`
 	args := []any{
-		nil,             // $1 -> tag filter
-		nil,             // $2 -> serie filter
-		0,               // $3 -> lastId
-		time.Unix(0, 0), // $4 -> lastTime
-		10}              // $5 -> limit
-	if len(param.TagId) > 0 {
-		args[0] = param.TagId
-	}
-	if len(param.SerieId) > 0 {
-		args[1] = param.SerieId
+		0,               // $1 -> lastId
+		time.Unix(0, 0), // $2 -> lastTime
+		10,              // $3 -> limit
+		nil,             // $4 -> tag filter
+		nil,             // $5 -> serie filter
 	}
 	if tokens := strings.Split(param.Last, "-"); len(tokens) == 2 {
 		if lastId, err := strconv.ParseInt(tokens[1], 10, strconv.IntSize); err == nil {
-			args[2] = lastId
+			args[0] = lastId
 		}
 		if lastTime, err := strconv.ParseInt(tokens[0], 10, strconv.IntSize); err == nil {
-			args[3] = time.Unix(0, lastTime)
+			args[1] = time.Unix(0, lastTime)
 		}
 	}
 	if param.Limit > 0 {
-		args[4] = param.Limit
+		args[2] = param.Limit
+	}
+	if len(param.Tag) > 0 {
+		args[3] = param.Tag
+	}
+	if len(param.Serie) > 0 {
+		args[4] = param.Serie
 	}
 
 	var rows []struct {

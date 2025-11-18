@@ -2,6 +2,8 @@ package page
 
 import "github.com/solsteace/misite/internal/entity"
 import "fmt"
+import "strings"
+import "net/url"
 import "github.com/solsteace/misite/internal/utility/api"
 
 const articleHtmlIdentifier = "main-article"
@@ -47,12 +49,15 @@ templ Article(article entity.Article) {
                         <li> 
                             <a
                                 class="tag-badge-list__tag"
-                                href= {fmt.Sprintf("%s?tId=%d", api.ExploreArticleUrl, t.Id)} 
-                                hx-get={fmt.Sprintf("%s?tId=%d", api.ExploreArticleUrl, t.Id)}
+                                href= {fmt.Sprintf("%s?search=%s", 
+                                    api.ExploreArticleUrl, url.QueryEscape(
+                                        fmt.Sprintf("tag:%s", strings.ReplaceAll(t.Name, " ", "_"))))} 
+                                hx-get= {fmt.Sprintf("%s?search=%s", 
+                                    api.ExploreArticleUrl, url.QueryEscape(
+                                        fmt.Sprintf("tag:%s", strings.ReplaceAll(t.Name, " ", "_"))))} 
                                 hx-trigger="click consume"
                                 hx-target="#page"
                                 hx-push-url="true"
-                                hx-replace-url="true"
                             > {t.Name} </a> 
                         </li>
                     }

@@ -4,18 +4,43 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
+	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/a-h/templ"
 	"github.com/solsteace/misite/internal/component/page"
-	"github.com/solsteace/misite/internal/component/widget"
 	"github.com/solsteace/misite/internal/persistence"
+	"github.com/solsteace/misite/internal/utility/api"
+)
+
+const (
+	reTagOpPrefix   = `tag:`
+	reSerieOpPrefix = `serie:`
+	reTitleOpPrefix = `title:`
+
+	reTagOp   = reTagOpPrefix + `[\w,]+`
+	reSerieOp = reSerieOpPrefix + `[\w,]+`
+	reTitleOp = reTitleOpPrefix + `[\w]+`
+	reAnyOp   = `\w`
+
+	reArticle = reTagOp + "|" + reSerieOp + "|" + reAnyOp
+	reProject = reTagOp + "|" + reSerieOp + "|" + reAnyOp
+	reSerie   = reTitleOp + "|" + reAnyOp
 )
 
 func (c Controller) ArticleList(w http.ResponseWriter, r *http.Request) error {
+	currentURL, err := url.Parse(r.Header.Get("Hx-Current-URL"))
+	if err != nil {
+		return fmt.Errorf("controller.ArticleList: %w", err)
+	}
 	urlQuery := r.URL.Query()
-	param := persistence.ArticlesQueryParam{}
-	if c.isAppRequest(r) {
+
+	searchQuery := strings.ToLower(urlQuery.Get("search"))
+	lastItem := urlQuery.Get("last")
+	param := persistence.ArticlesQueryParam{Last: lastItem}
+	if searchQuery != "" {
 		if sLimit := urlQuery.Get("limit"); sLimit != "" {
 			nLimit, err := strconv.ParseInt(sLimit, 10, strconv.IntSize)
 			if err != nil {
@@ -25,20 +50,25 @@ func (c Controller) ArticleList(w http.ResponseWriter, r *http.Request) error {
 			}
 			param.Limit = int(nLimit)
 		}
-		for _, id := range urlQuery[tagQueryParam] {
-			nId, err := strconv.ParseInt(id, 10, strconv.IntSize)
-			if err != nil {
-				return fmt.Errorf("controller.ArticleList: %w", err)
-			} else if nId > 0 {
-				param.TagId = append(param.TagId, int(nId))
-			}
+
+		re, err := regexp.Compile(fmt.Sprintf("(%s)+", reArticle))
+		if err != nil {
+			return fmt.Errorf("controller.ArticleList: %w", err)
 		}
-		for _, id := range urlQuery[serieQueryParam] {
-			nId, err := strconv.ParseInt(id, 10, strconv.IntSize)
-			if err != nil {
-				return fmt.Errorf("controller.ArticleList: %w", err)
-			} else if nId > 0 {
-				param.SerieId = append(param.SerieId, int(nId))
+		for _, t := range re.FindAll([]byte(searchQuery), -1) {
+			token := string(t)
+			if p := reTagOpPrefix; strings.HasPrefix(token, p) {
+				value := strings.ReplaceAll(strings.TrimPrefix(token, p), "_", " ")
+				for _, v := range strings.Split(value, ",") {
+					param.Tag = append(param.Tag, v)
+				}
+			} else if p := reSerieOpPrefix; strings.HasPrefix(token, p) {
+				value := strings.ReplaceAll(strings.TrimPrefix(token, p), "_", " ")
+				for _, v := range strings.Split(value, ",") {
+					param.Serie = append(param.Serie, v)
+				}
+			} else {
+				// Deal with non-operator thing
 			}
 		}
 	}
@@ -48,16 +78,15 @@ func (c Controller) ArticleList(w http.ResponseWriter, r *http.Request) error {
 		return fmt.Errorf("controller.ArticleList: %w", err)
 	}
 
-	var sTopTags string
-	topTags := c.service.MostTagsOnArticles(articles, 16)
-	for idx, i := range topTags {
-		sTopTags += fmt.Sprintf("%s=%s", tagQueryParam, strconv.Itoa(i))
-		if idx < len(topTags)-1 {
-			sTopTags += "&"
-		}
+	var pageComponent templ.Component
+	shouldFullRender := (currentURL.Path != api.ExploreArticleUrl || // from outside of the page
+		currentURL.Path == api.ExploreArticleUrl && c.isAppRequest(r) && searchQuery == "" && lastItem == "") // calling self via navbar
+	if shouldFullRender {
+		pageComponent = page.ArticleList(articles)
+	} else {
+		pageComponent = page.Articles(articles)
 	}
 
-	pageComponent := page.ArticleList(articles, sTopTags)
 	if !c.isAppRequest(r) {
 		if err := c.serveWithBase(pageComponent, w, r); err != nil {
 			return fmt.Errorf("controller.ArticleList: %w", err)
@@ -69,9 +98,16 @@ func (c Controller) ArticleList(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (c Controller) ProjectList(w http.ResponseWriter, r *http.Request) error {
+	currentURL, err := url.Parse(r.Header.Get("Hx-Current-URL"))
+	if err != nil {
+		return fmt.Errorf("controller.ArticleList: %w", err)
+	}
 	urlQuery := r.URL.Query()
-	param := persistence.ProjectsQueryParam{}
-	if c.isAppRequest(r) {
+
+	searchQuery := strings.ToLower(urlQuery.Get("search"))
+	lastItem := urlQuery.Get("last")
+	param := persistence.ProjectsQueryParam{Last: lastItem}
+	if searchQuery != "" {
 		if sLimit := urlQuery.Get("limit"); sLimit != "" {
 			nLimit, err := strconv.ParseInt(sLimit, 10, strconv.IntSize)
 			if err != nil {
@@ -81,12 +117,25 @@ func (c Controller) ProjectList(w http.ResponseWriter, r *http.Request) error {
 			}
 			param.Limit = int(nLimit)
 		}
-		for _, id := range urlQuery[tagQueryParam] {
-			nId, err := strconv.ParseInt(id, 10, strconv.IntSize)
-			if err != nil {
-				return fmt.Errorf("controller.ProjectList: %w", err)
-			} else if nId > 0 {
-				param.TagId = append(param.TagId, int(nId))
+
+		re, err := regexp.Compile(fmt.Sprintf("(%s)+", reProject))
+		if err != nil {
+			return fmt.Errorf("controller.ProjectList: %w", err)
+		}
+		for _, t := range re.FindAll([]byte(searchQuery), -1) {
+			token := string(t)
+			if p := reTagOpPrefix; strings.HasPrefix(token, p) {
+				value := strings.ReplaceAll(strings.TrimPrefix(token, p), "_", " ")
+				for _, v := range strings.Split(value, ",") {
+					param.Tag = append(param.Tag, v)
+				}
+			} else if p := reSerieOpPrefix; strings.HasPrefix(token, p) {
+				value := strings.ReplaceAll(strings.TrimPrefix(token, p), "_", " ")
+				for _, v := range strings.Split(value, ",") {
+					param.Serie = append(param.Serie, v)
+				}
+			} else {
+				// Deal with non-operator thing
 			}
 		}
 	}
@@ -96,16 +145,15 @@ func (c Controller) ProjectList(w http.ResponseWriter, r *http.Request) error {
 		return fmt.Errorf("controller.ProjectList: %w", err)
 	}
 
-	var sTopTags string
-	topTags := c.service.MostTagsOnProjects(projects, 16)
-	for idx, i := range topTags {
-		sTopTags += fmt.Sprintf("%s=%s", tagQueryParam, strconv.Itoa(i))
-		if idx < len(topTags)-1 {
-			sTopTags += "&"
-		}
+	var pageComponent templ.Component
+	shouldFullRender := (currentURL.Path != api.ExploreProjectUrl || // from outside of the page
+		currentURL.Path == api.ExploreProjectUrl && c.isAppRequest(r) && searchQuery == "" && lastItem == "") // calling self via navbar
+	if shouldFullRender {
+		pageComponent = page.ProjectList(projects)
+	} else {
+		pageComponent = page.Projects(projects)
 	}
 
-	pageComponent := page.ProjectList(projects, sTopTags)
 	if !c.isAppRequest(r) {
 		if err := c.serveWithBase(pageComponent, w, r); err != nil {
 			return fmt.Errorf("controller.ProjectList: %w", err)
@@ -117,19 +165,39 @@ func (c Controller) ProjectList(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (c Controller) SerieList(w http.ResponseWriter, r *http.Request) error {
+	currentURL, err := url.Parse(r.Header.Get("Hx-Current-URL"))
+	if err != nil {
+		return fmt.Errorf("controller.ArticleList: %w", err)
+	}
 	urlQuery := r.URL.Query()
-	param := persistence.SerieListQueryParam{}
-	if c.isAppRequest(r) {
+
+	searchQuery := strings.ToLower(urlQuery.Get("search"))
+	lastItem := urlQuery.Get("last")
+	param := persistence.SerieListQueryParam{Last: lastItem}
+	if searchQuery != "" {
 		if sLimit := urlQuery.Get("limit"); sLimit != "" {
 			nLimit, err := strconv.ParseInt(sLimit, 10, strconv.IntSize)
 			if err != nil {
-				return fmt.Errorf("controller.SerieList: %w", err)
+				return fmt.Errorf("controller.ArticleList: %w", err)
 			} else if nLimit < 0 {
 				nLimit = dEFAULT_PAGE_SIZE
 			}
 			param.Limit = int(nLimit)
 		}
-		param.Last = urlQuery.Get("last")
+
+		re, err := regexp.Compile(fmt.Sprintf("(%s)+", reSerie))
+		if err != nil {
+			return fmt.Errorf("controller.ArticleList: %w", err)
+		}
+		for _, t := range re.FindAll([]byte(searchQuery), -1) {
+			token := string(t)
+			if p := reTitleOpPrefix; strings.HasPrefix(token, p) {
+				value := strings.ReplaceAll(strings.TrimPrefix(token, p), "_", " ")
+				param.Title = value
+			} else {
+				// Deal with non-operator thing
+			}
+		}
 	}
 
 	serieList, err := c.service.SerieList(param)
@@ -137,49 +205,21 @@ func (c Controller) SerieList(w http.ResponseWriter, r *http.Request) error {
 		return fmt.Errorf("controller<Controller.SerieList>: %w", err)
 	}
 
-	pageComponent := page.SerieList(serieList)
+	var pageComponent templ.Component
+	shouldFullRender := (currentURL.Path != api.ExploreSeriesUrl || // from outside of the page
+		currentURL.Path == api.ExploreSeriesUrl && c.isAppRequest(r) && searchQuery == "" && lastItem == "") // calling self via navbar
+	if shouldFullRender {
+		pageComponent = page.SerieList(serieList)
+	} else {
+		pageComponent = page.Series(serieList)
+	}
+
 	if !c.isAppRequest(r) {
 		if err := c.serveWithBase(pageComponent, w, r); err != nil {
 			return fmt.Errorf("controller.SerieList: %w", err)
 		}
 	} else if err := pageComponent.Render(context.Background(), w); err != nil {
 		return fmt.Errorf("controller.SerieList: %w", err)
-	}
-	return nil
-}
-
-func (c Controller) ExplorationTags(w http.ResponseWriter, r *http.Request) error {
-	urlQuery := r.URL.Query()
-
-	var tagIds []int
-	for _, id := range urlQuery[tagQueryParam] {
-		nId, err := strconv.ParseInt(id, 10, strconv.IntSize)
-		if err != nil {
-			return fmt.Errorf("controller.Tags: %w", err)
-		} else if nId > 0 {
-			tagIds = append(tagIds, int(nId))
-		}
-	}
-
-	var pageComponent templ.Component
-	switch urlQuery.Get("by") {
-	case "article":
-		tags, count, err := c.service.CountArticleMatchingTags(tagIds)
-		if err != nil {
-			return fmt.Errorf("controller<Controller.Tags>: %w", err)
-		}
-		pageComponent = widget.ExplorationTags(tags, count, "articles")
-	case "project":
-		tags, count, err := c.service.CountProjectMatchingTags(tagIds)
-		if err != nil {
-			return fmt.Errorf("controller<Controller.Tags>: %w", err)
-		}
-		pageComponent = widget.ExplorationTags(tags, count, "projects")
-	default:
-		pageComponent = page.NotFound()
-	}
-	if err := pageComponent.Render(context.Background(), w); err != nil {
-		return fmt.Errorf("controller.Tags: %w", err)
 	}
 	return nil
 }
