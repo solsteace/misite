@@ -30,6 +30,7 @@ func (r Router) UseOn(parent *chi.Mux) {
 	router.Get("/project/{id}", reqres.HttpHandlerWithError(r.handler.Project))
 	router.Get("/article/{id}", reqres.HttpHandlerWithError(r.handler.Article))
 	router.Get("/serie/{id}", reqres.HttpHandlerWithError(r.handler.Serie))
+	router.Get("/tags", reqres.HttpHandlerWithError(r.handler.TagList))
 	router.Get("/series", reqres.HttpHandlerWithError(r.handler.SerieList))
 	router.Get("/articles", reqres.HttpHandlerWithError(r.handler.ArticleList))
 	router.Get("/projects", reqres.HttpHandlerWithError(r.handler.ProjectList))

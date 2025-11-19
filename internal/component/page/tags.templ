@@ -1,0 +1,59 @@
+package page
+
+import "github.com/solsteace/misite/internal/entity"
+import "github.com/solsteace/misite/internal/utility/api"
+import "net/url"
+import "strings"
+import "fmt"
+
+templ Tags(by string, tags []entity.TagStat) {
+    <section class="tagList">
+        {{
+        currentFirst := byte(0)
+        idx := 0
+
+        var searchEndpoint string
+        switch by {
+        case "article":
+            searchEndpoint = api.ExploreArticleUrl
+        case "project":
+            searchEndpoint = api.ExploreProjectUrl
+        }
+        }}
+
+        <h2>
+            if searchEndpoint == api.ExploreArticleUrl {
+                Article Tags
+            } else if searchEndpoint == api.ExploreProjectUrl{
+                Project Tags
+            }
+        </h2>
+        for idx < len(tags) {
+            if currentFirst == byte(0) || currentFirst != tags[idx].Name[0] {
+                {{ currentFirst = tags[idx].Name[0]}}
+                <div class="lyt__1x2 tagList__entry">
+                    <div class="cmp__sticky">
+                        <p class="cmp__sticky-elem tagList__entry-group u__h--1"> {string(currentFirst)}</p>
+                    </div>
+                    <div class="cmp__badge-list tagList__entry-items">
+                        for ; idx < len(tags) && currentFirst == tags[idx].Name[0]; idx++ {
+                            {{ tag := tags[idx] }}
+                            <a 
+                                class="tag-badge-list__tag--normal"
+                                href= {fmt.Sprintf("%s?search=%s", 
+                                    searchEndpoint, url.QueryEscape(
+                                        fmt.Sprintf("tag:%s", strings.ReplaceAll(tag.Name, " ", "_"))))} 
+                                hx-get= {fmt.Sprintf("%s?search=%s", 
+                                    searchEndpoint, url.QueryEscape(
+                                        fmt.Sprintf("tag:%s", strings.ReplaceAll(tag.Name, " ", "_"))))} 
+                                hx-trigger="click consume"
+                                hx-target="#page"
+                                hx-push-url="true"
+                            > {tag.Name} ({tag.Count})</a>
+                        }
+                    </div>
+                </div>
+            }
+        }
+    </section>
+}

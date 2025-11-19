@@ -223,3 +223,42 @@ func (c Controller) SerieList(w http.ResponseWriter, r *http.Request) error {
 	}
 	return nil
 }
+
+func (c Controller) TagList(w http.ResponseWriter, r *http.Request) error {
+	urlQuery := r.URL.Query()
+	by := urlQuery.Get("by")
+	param := persistence.TagQueryParams{}
+	if sLimit := urlQuery.Get("limit"); sLimit != "" {
+		nLimit, err := strconv.ParseInt(sLimit, 10, strconv.IntSize)
+		if err != nil {
+			return fmt.Errorf("controller.TagList: %w", err)
+		} else if nLimit < 0 {
+			nLimit = dEFAULT_PAGE_SIZE
+		}
+		param.Limit = int(nLimit)
+	}
+	if sLimit := urlQuery.Get("page"); sLimit != "" {
+		nLimit, err := strconv.ParseInt(sLimit, 10, strconv.IntSize)
+		if err != nil {
+			return fmt.Errorf("controller.TagList: %w", err)
+		} else if nLimit < 0 {
+			nLimit = dEFAULT_PAGE_SIZE
+		}
+		param.Limit = int(nLimit)
+	}
+
+	tagStats, err := c.service.Tags(by, param)
+	if err != nil {
+		return fmt.Errorf("controller.TagList: %w", err)
+	}
+
+	pageComponent := page.Tags(by, tagStats)
+	if !c.isAppRequest(r) {
+		if err := c.serveWithBase(pageComponent, w, r); err != nil {
+			return fmt.Errorf("controller.SerieList: %w", err)
+		}
+	} else if err := pageComponent.Render(context.Background(), w); err != nil {
+		return fmt.Errorf("controller.SerieList: %w", err)
+	}
+	return nil
+}

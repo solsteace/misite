@@ -5,6 +5,7 @@ import (
 
 	"github.com/solsteace/misite/internal/entity"
 	"github.com/solsteace/misite/internal/persistence"
+	"github.com/solsteace/misite/internal/utility/lib/oops"
 )
 
 func (s Service) Projects(param persistence.ProjectsQueryParam) ([]entity.ProjectList, error) {
@@ -56,4 +57,25 @@ func (s Service) SerieProjectList(
 			"service<Service.SerieProjects>: %w", err)
 	}
 	return serieProjects, nil
+}
+
+func (s Service) Tags(by string, param persistence.TagQueryParams) ([]entity.TagStat, error) {
+	var tagStats []entity.TagStat
+	var err error
+
+	switch by {
+	case "article":
+		tagStats, err = s.store.ArticleTags(param)
+	case "project":
+		tagStats, err = s.store.ProjectTags(param)
+	default:
+		return []entity.TagStat{}, oops.NotFound{
+			Err: fmt.Errorf("`by` should be either `article` or `project`")}
+	}
+	if err != nil {
+		return []entity.TagStat{}, fmt.Errorf(
+			"service<Service.Tags>: %w", err)
+	}
+
+	return tagStats, nil
 }
