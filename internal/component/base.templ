@@ -1,5 +1,9 @@
 package component
 
+import "github.com/solsteace/misite/internal/component/page"
+
+var setListenerOnce = templ.NewOnceHandle()
+
 templ Base(alpinejsUrl, htmxUrl string) {
     <!DOCTYPE html>
     <html>
@@ -15,14 +19,13 @@ templ Base(alpinejsUrl, htmxUrl string) {
             <script defer src={alpinejsUrl}></script>
             <script src={htmxUrl}></script>
         </head>
-        <body
-            hx-push-url="true"
-            hx-replace-url="true"
-        >
+        <body >
             <div class="site__topbar">
                 <nav
                     hx-target="#page"
                     hx-swap="innerHTML"
+                    hx-push-url="true"
+                    hx-replace-url="true"
                 >
                     <ul class="site__nav">
                         <li>
@@ -76,5 +79,10 @@ templ Base(alpinejsUrl, htmxUrl string) {
         </body>
 
         <script src="/static/post.js"></script>
+        @setListenerOnce.Once() {
+            @page.ArticleListScript()
+            @page.ProjectListScript()
+            @page.SerieListScript()
+        }
     </html>
 }

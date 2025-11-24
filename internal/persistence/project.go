@@ -3,69 +3,99 @@ package persistence
 import (
 	"database/sql"
 	"fmt"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/solsteace/misite/internal/entity"
 	"github.com/solsteace/misite/internal/utility/lib/oops"
 )
 
 type ProjectsQueryParam struct {
-	Page  int
 	Limit int
-	TagId []int
+	Last  string
+	Tag   []string
+	Serie []string
 }
 
 func (p Pg) Projects(param ProjectsQueryParam) ([]entity.ProjectList, error) {
 	query := `
-		WITH matching_projects_by_tag AS(
-			SELECT 
-				project_id, 
-				COUNT(DISTINCT tag_id) AS "n_tag"
-			FROM project_tags
-			WHERE 
-				($1::int[] IS NULL)
-				OR tag_id = ANY($1)
-			GROUP BY project_id
-			HAVING
-				($1::int[] IS NULL)
-				OR COUNT(tag_id) = CARDINALITY($1)
-			LIMIT $2 OFFSET $3)
 		SELECT
-			projects.id AS "id",
-			projects.name AS "name",
-			projects.thumbnail AS "thumbnail",
-			projects.synopsis AS "synopsis",
-			tags.id AS "tag.id",
-			tags.name AS "tag.name",
-			series.id AS "serie.id",
-			series.name AS "serie.name"
-		FROM projects
-		LEFT JOIN series ON projects.devblog_serie = series.id
+		   	projects.id,
+		   	projects.name,
+		   	projects.synopsis,
+		   	projects.created_at,
+		   	projects.updated_at,
+		   	tags.id AS "tag.id",
+		   	tags.name AS "tag.name",
+		   	series.id AS "serie.id",
+		   	series.name AS "serie.name"
+		FROM (
+			SELECT *
+			FROM projects
+			WHERE
+				id > $1
+				AND updated_at >= $2
+				AND ($4::VARCHAR[] IS NULL
+					OR EXISTS (
+						SELECT 1
+						FROM project_tags
+						JOIN tags ON project_tags.tag_id = tags.id
+						WHERE
+							project_tags.project_id = projects.id
+							AND LOWER(tags.name) = ANY($4)
+						GROUP BY project_id
+						HAVING COUNT(DISTINCT tag_id) = CARDINALITY($4)))
+				AND ($5::VARCHAR[] IS NULL
+					OR EXISTS (
+						SELECT 1
+						FROM projects AS temp_projects
+						JOIN series ON series.id = projects.devblog_serie
+						WHERE 
+							temp_projects.id = projects.id
+							AND LOWER(series.name) = ANY($5)))
+			ORDER BY
+				updated_at DESC,
+				id
+			LIMIT $3
+		) AS projects
 		LEFT JOIN project_tags ON project_tags.project_id = projects.id
 		LEFT JOIN tags ON project_tags.tag_id = tags.id
-		WHERE
-			(SELECT true
-			FROM matching_projects_by_tag
-			WHERE matching_projects_by_tag.project_id = projects.id)
-		ORDER BY projects.id`
-	if param.Limit < 1 {
-		param.Limit = 10
-	}
-	if param.Page < 1 {
-		param.Page = 1
-	}
+		LEFT JOIN series ON projects.devblog_serie = series.id
+		ORDER BY 
+			projects.updated_at DESC, 
+			id`
 	args := []any{
-		nil,
-		param.Limit,
-		(param.Page - 1) * param.Limit}
-	if len(param.TagId) > 0 {
-		args[0] = param.TagId
+		0,               // $1 -> lastId
+		time.Unix(0, 0), // $2 -> lastTime
+		10,              // $3 -> limit
+		nil,             // $4 -> tagList
+		nil}             // $5 -> serieList
+	if tokens := strings.Split(param.Last, "-"); len(tokens) == 2 {
+		if lastId, err := strconv.ParseInt(tokens[1], 10, strconv.IntSize); err == nil {
+			args[0] = lastId
+		}
+		if lastTime, err := strconv.ParseInt(tokens[0], 10, strconv.IntSize); err == nil {
+			args[1] = time.Unix(0, lastTime)
+		}
+	}
+	if param.Limit > 0 {
+		args[2] = param.Limit
+	}
+	if len(param.Tag) > 0 {
+		args[3] = param.Tag
+	}
+	if len(param.Serie) > 0 {
+		args[4] = param.Serie
 	}
 
 	var rows []struct {
-		Id        int    `db:"id"`
-		Name      string `db:"name"`
-		Thumbnail string `db:"thumbnail"`
-		Synopsis  string `db:"synopsis"`
+		Id        int       `db:"id"`
+		Name      string    `db:"name"`
+		Thumbnail string    `db:"thumbnail"`
+		Synopsis  string    `db:"synopsis"`
+		CreatedAt time.Time `db:"created_at"`
+		UpdatedAt time.Time `db:"updated_at"`
 
 		Serie struct {
 			Id   sql.Null[int]    `db:"id"`
@@ -92,8 +122,9 @@ func (p Pg) Projects(param ProjectsQueryParam) ([]entity.ProjectList, error) {
 			projects = append(projects, entity.ProjectList{
 				Id:        r.Id,
 				Name:      r.Name,
-				Thumbnail: r.Thumbnail,
-				Synopsis:  r.Synopsis})
+				Synopsis:  r.Synopsis,
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now()})
 			lastProject = &projects[len(projects)-1]
 		}
 		if r.Tag.Id.Valid {
@@ -124,9 +155,10 @@ func (p Pg) Project(id int) (entity.Project, error) {
 		SELECT
 			projects.id AS "id",
 			projects.name AS "name",
-			projects.thumbnail AS "thumbnail",
 			projects.synopsis AS "synopsis",
 			projects.description AS "description",
+			projects.created_at AS "created_at",
+			projects.updated_at AS "updated_at",
 			series.id AS "serie.id",
 			series.name AS "serie.name",
 			tags.id AS "tag.id",
@@ -144,11 +176,12 @@ func (p Pg) Project(id int) (entity.Project, error) {
 	args := []any{id}
 
 	var rows []struct {
-		Id          int    `db:"id"`
-		Name        string `db:"name"`
-		Thumbnail   string `db:"thumbnail"`
-		Synopsis    string `db:"synopsis"`
-		Description string `db:"description"`
+		Id          int       `db:"id"`
+		Name        string    `db:"name"`
+		Synopsis    string    `db:"synopsis"`
+		Description string    `db:"description"`
+		CreatedAt   time.Time `db:"created_at"`
+		UpdatedAt   time.Time `db:"updated_at"`
 
 		Serie struct {
 			Id   sql.Null[int]    `db:"id"`
@@ -176,9 +209,10 @@ func (p Pg) Project(id int) (entity.Project, error) {
 	project := entity.Project{
 		Id:          projectRow.Id,
 		Name:        projectRow.Name,
-		Thumbnail:   projectRow.Thumbnail,
 		Synopsis:    projectRow.Synopsis,
-		Description: projectRow.Description}
+		Description: projectRow.Description,
+		CreatedAt:   projectRow.CreatedAt,
+		UpdatedAt:   projectRow.UpdatedAt}
 	if projectRow.Serie.Id.Valid {
 		project.Serie = &struct {
 			Id   int

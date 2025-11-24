@@ -2,70 +2,71 @@ package page
 
 import "github.com/solsteace/misite/internal/entity"
 import "fmt"
-import "github.com/solsteace/misite/internal/component/utility"
+import "github.com/solsteace/misite/internal/utility/api"
+import "net/url"
+import "strings"
 
-func newProjectHTMLIdentifier() string {
-    return "main-project"
-}
-
-templ onProject() {
-    @templ.JSUnsafeFuncCall(` window.scroll({ top: 0, left: 0, behavior: "smooth" })`)
-    @templ.JSUnsafeFuncCall(makeOutlineExpr(
-        newProjectHTMLIdentifier(), 
-        fmt.Sprintf("outline-%s", newProjectHTMLIdentifier())))
-}
+const projectHtmlId = "main-project"
 
 templ Project(project entity.Project) {
     <div class="lyt__1x2 lyt__1x2--1-3 specification">
         <div class="specification__extras">
-            <nav class="specification__extra">
+            <div class="specification__extra">
+                <b class="u__h--6"> Etc. </b> 
+                <p> {project.DisplayTime()} </p>
+            </div>
+
+            <div class="specification__extra">
                 if len(project.Link) > 0 {
                     <b class="u__h--6"> Links </b>
                     for _, l := range project.Link {
                         <a href={l.Url}> {l.DisplayText} </a>
                     }
                 }
-            </nav>
+            </div>
 
             <div class="cmp__sticky">
-                <nav 
-                    class="cmp__sticky-elem specification__extra specification__outline"
-                    id={fmt.Sprintf("outline-%s", newProjectHTMLIdentifier())}
-                > 
+                <div class="cmp__sticky-elem specification__extra specification__outline">
                     <b class="u__h--6"> Outline </b>
-                </nav>
+                    <nav id={fmt.Sprintf("outline-%s", projectHtmlId)} > </nav>
+                </div>
             </div>
         </div>
 
-        <article id={newProjectHTMLIdentifier()} class="specification__content">
+        <article id={projectHtmlId} class="specification__content">
             <header class="specification__content-header">
-                <div class="specification__aside"> 
-                    if project.Serie != nil {
-                        <p class="u__dim"> Featured in </p>
-                        <a
-                            href={fmt.Sprintf("/serie/%d", project.Serie.Id)}
-                            hx-get={fmt.Sprintf("/serie/%d", project.Serie.Id)}
-                            hx-trigger="click"
-                            hx-target="#page"
-                            hx-push-url="true"
-                            hx-replace-url="true"
-                            hx-swap="innerHTML"
-                        > {project.Serie.Name} </a>
-                    }
-                </div>
-
                 <h1> {project.Name} </h1>
                 <p> {project.Synopsis} </p>
 
                 <ul class="cmp__badge-list tag-badge-list">
+                    if project.Serie != nil {
+                        <li> 
+                            <a
+                                class="tag-badge-list__tag tag-badge-list__tag--special"
+                                href={fmt.Sprintf("/serie/%d", project.Serie.Id)}
+                                hx-get={fmt.Sprintf("/serie/%d", project.Serie.Id)}
+                                hx-trigger="click"
+                                hx-target="#page"
+                                hx-push-url="true"
+                                hx-replace-url="true"
+                                hx-swap="innerHTML"
+                            > {project.Serie.Name} </a>
+                        </li>
+                    }
+
                     for _, t := range project.Tag {
                         <li> 
                             <a
                                 class="tag-badge-list__tag"
+                                href= {fmt.Sprintf("%s?search=%s", 
+                                    api.ExploreProjectUrl, url.QueryEscape(
+                                        fmt.Sprintf("tag:%s", strings.ReplaceAll(t.Name, " ", "_"))))} 
+                                hx-get= {fmt.Sprintf("%s?search=%s", 
+                                    api.ExploreProjectUrl, url.QueryEscape(
+                                        fmt.Sprintf("tag:%s", strings.ReplaceAll(t.Name, " ", "_"))))} 
                                 hx-trigger="click consume"
                                 hx-target="#page"
-                                hx-get={fmt.Sprintf("%s?tagId=%d", utility.ExploreProjectUrl, t.Id)}
-                                href= {fmt.Sprintf("%s?tagId=%d", utility.ExploreProjectUrl, t.Id)} 
+                                hx-push-url="true"
                             > {t.Name} </a> 
                         </li>
                     }
@@ -74,6 +75,12 @@ templ Project(project entity.Project) {
 
             @templ.Raw(project.Description)
         </article>
-        @onProject()
+
+        @templ.JSUnsafeFuncCall(` window.scroll({ top: 0, left: 0, behavior: "smooth" })`)
+        @templ.JSUnsafeFuncCall(
+            fmt.Sprintf(
+                "makeArticleOutline('%s', '%s')", 
+                projectHtmlId, 
+                fmt.Sprintf("outline-%s", projectHtmlId)))
     </div>
 }

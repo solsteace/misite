@@ -2,93 +2,233 @@ package page
 
 import "github.com/solsteace/misite/internal/entity"
 import "fmt"
-import "strconv"
 import "strings"
-import "github.com/solsteace/misite/internal/component/utility"
+import "net/url"
+import "github.com/solsteace/misite/internal/utility/api"
 
-func mapIntToString(ints []int, prefix string) []string {
-    var sInts []string
-    for _, i := range ints {
-        sInt := fmt.Sprintf("%s%s", prefix, strconv.Itoa(i))
-        sInts = append(sInts, sInt)
-    }
-    return sInts
-}
-
-templ ProjectList(project []entity.ProjectList, topTags []int) {
-    <div class="lyt__1x2 lyt__1x2--1-3 exploration">
+templ ProjectList(project []entity.ProjectList) {
+    <div 
+        id="projectListPage"
+        class="lyt__1x2 lyt__1x2--1-3 exploration"
+        x-data="projectList"
+    >
         <div class="exploration__tools"> 
-            <section> SEARCH FUNCTIONALITY HERE </section>
-            <section>
-                <b class="u__h--4"> # </b>
-                <nav 
-                    class="projects__tags"
-                    hx-get={fmt.Sprintf(
-                        "/tags?by=project&%s", 
-                        strings.Join(mapIntToString(topTags, "tagId="), "&"))}
-                    hx-trigger="load"
+            <section class="exploration__search">
+                <form 
+                    class="exploration__search-input"
+                    @submit.prevent="onSearch"
+                    x-init="$watch('prompt', (_, __) => { htmx.process($el) })"
+                    :hx-get="`/projects?search=${encodeURIComponent($data.prompt || ' ')}`"
+                    hx-target="#exploration__list"
+                    hx-swap="innerHTML"
+                    hx-push-url="true"
+                >
+                    <input 
+                        id="project__search"
+                        type="search"
+                        placeholder="Search something!"
+                        x-model="$data.prompt"
+                        :value="$data.prompt"
+                        />
+                    <button type="submit" > 
+                        <svg 
+                            class="cmp__icon cmp__icon-search" 
+                            viewBox="0 0 24 24" 
+                            width="24" 
+                            height="24"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <circle 
+                                cx="11" 
+                                cy="11" 
+                                r="5" 
+                                stroke="white"
+                                stroke-width="2"
+                                fill="none"
+                            />
+
+                            <line 
+                                x1="16" y1="16" 
+                                x2="21" y2="21" 
+                                stroke="white"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+                    </button> // make SVG magnifying glass
+                </form>
+
+                <div class="u__dim exploration__search-alternative">
+                    <p> ...or 
+                        <a class="u__active-on-hover" href="/tags?by=project"> explore all tags </a> 
+                    </p>
+                </div>
+            </section>
+
+            // <div class="cmp__sticky">
+            //     <div class="cmp__sticky-elem exploration__highlight">
+            //         <p class="u__h--6"> Highlights </p>
+            //         <div  class="exploration__highlight-entries">
+            //             <p> Scalable Queueing Service</p>
+            //             <p> Distributed Cache Simulator</p>
+            //             <p> Event-Driven Notification System</p>
+            //         </div>
+            //     </div>
+            // </div>
+        </div>
+
+        <section>
+            <div 
+                id="exploration__list"
+                class="cmp__list exploration__entries"
+                if nProject := len(project); nProject > 0 {
+                    x-data={fmt.Sprintf(
+                        "{lastItem: %d}",
+                        project[nProject - 1].Id)}
+                }
+            > 
+                @Projects(project)
+            </div>
+            <div class="exploration__expand">
+                <button
+                    x-show="!endOfResult"
+                    :hx-get="$data.next"
+                    hx-target="#exploration__list"
+                    hx-swap="beforeend"
                     hx-replace-url="false"
                     hx-push-url="false"
-                    hx-swap="innerHTML"
-                > <p> Loading... </p> </nav>
-            </section>
-        </div>
-
-        <div class="cmp__list exploration__entries" > 
-            for idx, p := range project {
-                <div class="exploration__entry" >
-                    <div class="exploration__entry-aside">
-                        if p.Serie != nil {
-                            <p class="u__dim"> Featured in </p>
-                            <a 
-                                href={fmt.Sprintf("/serie/%d", p.Serie.Id)}
-                                hx-get={fmt.Sprintf("/serie/%d", p.Serie.Id)}
-                                hx-trigger="click consume"
-                                hx-target="#page"
-                                hx-swap="innerHTML"
-                                hx-replace-url="true"
-                                hx-push-url="true"
-                            > {p.Serie.Name} </a> 
-                        }
-                    </div>
-
-                    <a 
-                        class="u__h--3"
-                        href={fmt.Sprintf("/project/%d", p.Id)}
-                        hx-get={fmt.Sprintf("/project/%d", p.Id)}
-                        hx-trigger="click consume"
-                        hx-target="#page"
-                        hx-swap="innerHTML"
-                        hx-replace-url="true"
-                        hx-push-url="true"
-                    > {p.Name} </a>
-                    <p> {p.Synopsis} </p>
-
-                    if len(p.Tag) > 0 {
-                        <section>
-                            <ul class="cmp__badge-list tag-badge-list">
-                                for _, t := range p.Tag {
-                                    <li> 
-                                        <a
-                                            class="cmp__badge-list tag-badge-list__tag"
-                                            hx-trigger="click consume"
-                                            hx-target="#page"
-                                            hx-get={fmt.Sprintf("%s?tagId=%d", utility.ExploreProjectUrl, t.Id)}
-                                            href= {fmt.Sprintf("%s?tagId=%d", utility.ExploreProjectUrl, t.Id)} 
-                                        >
-                                            {t.Name}
-                                        </a> 
-                                    </li>
-                                }
-                            </ul>
-                        </section>
-                    }
-                </div>
-
-                if idx < len(project) - 1 {
-                    <div class="cmp__list-delimiter"> </div>
-                }
-            }
-        </div>
+                    id="exploration__expand-button"
+                > Load more </button>
+                <p x-show="endOfResult" > No more items! </p>
+            </div>
+        </section>
     </div>
+}
+
+templ Projects(project []entity.ProjectList) {
+    for idx, p := range project {
+        <div 
+            if entity.ProjectIsNew(p.CreatedAt) {
+                class="exploration__entry exploration__entry--new "
+            } else if entity.ProjectIsRecentlyUpdated(p.CreatedAt, p.UpdatedAt) {
+                class="exploration__entry exploration__entry--updated"
+            } else {
+                class="exploration__entry"
+            }
+
+            if idx == len(project) - 1 {
+                x-init={fmt.Sprintf("onLastItem('%d-%d')", p.UpdatedAt.UnixNano(), p.Id)}
+            }
+        >
+            <div class="exploration__entry-title">
+                <a 
+                    class="u__h--3"
+                    href={fmt.Sprintf("/project/%d", p.Id)}
+                    hx-get={fmt.Sprintf("/project/%d", p.Id)}
+                    hx-trigger="click consume"
+                    hx-target="#page"
+                    hx-swap="innerHTML"
+                    hx-replace-url="true"
+                    hx-push-url="true"
+                > {p.Name} </a>
+            </div>
+            <p> {p.Synopsis} </p>
+
+            <ul class="cmp__badge-list tag-badge-list">
+                if p.Serie != nil {
+                    <li>
+                        <a 
+                            class="tag-badge-list__tag tag-badge-list__tag--special"
+                            href={fmt.Sprintf("/serie/%d", p.Serie.Id)}
+                            hx-get={fmt.Sprintf("/serie/%d", p.Serie.Id)}
+                            hx-trigger="click consume"
+                            hx-target="#page"
+                            hx-swap="innerHTML"
+                            hx-replace-url="true"
+                            hx-push-url="true"
+                        > {p.Serie.Name} </a> 
+                    </li>
+                }
+                if len(p.Tag) > 0 {
+                    for _, t := range p.Tag {
+                        <li> 
+                            <a
+                                class="tag-badge-list__tag"
+                                href= {fmt.Sprintf("%s?search=%s", 
+                                    api.ExploreProjectUrl, url.QueryEscape(
+                                        fmt.Sprintf("tag:%s", strings.ReplaceAll(t.Name, " ", "_"))))} 
+                                @click.prevent={fmt.Sprintf("activeQuery = 'tag:%s'; setEndOfResult(false)",
+                                    strings.ReplaceAll(t.Name, " ", "_"))}
+                                hx-get= {fmt.Sprintf("%s?search=%s", 
+                                    api.ExploreProjectUrl, url.QueryEscape(
+                                        fmt.Sprintf("tag:%s", strings.ReplaceAll(t.Name, " ", "_"))))} 
+                                hx-target="#exploration__list"
+                                hx-swap="innerHTML"
+                                hx-push-url="true"
+                            > {t.Name} </a> 
+                        </li>
+                    }
+                }
+            </ul>
+        </div>
+        <div class="cmp__list-delimiter"> </div>
+    }
+}
+
+templ ProjectListScript() {
+    <script> (() => {
+        document.addEventListener('alpine:init', (e) => {
+            Alpine.data('projectList', () => {
+                const location = new URL(window.location.toString())
+                const isMyRequest = location.pathname == "/projects"
+                return {
+                    prompt:"",
+                    activeQuery: isMyRequest
+                        ? (location.searchParams.get("search") ?? "")
+                        : "",
+                    next: "",
+                    endOfResult: false,
+                    setEndOfResult(state) {
+                        this.endOfResult = state
+                    }, 
+                    onLastItem(lastItem) {
+                        this.next = `/projects?last=${lastItem}`
+                        if(this.activeQuery) {
+                            this.next += `&search=${this.activeQuery}`
+                        }
+
+                        Alpine.nextTick(() => {
+                            htmx.process(document.getElementById("exploration__expand-button"))
+                        })
+                    },
+                    onSearch() {
+                        this.activeQuery = this.prompt
+                        this.endOfResult = false
+                    }
+                }
+            })
+        })
+
+        document.body.addEventListener('htmx:beforeSwap', (e) => {
+            const req = e.detail.xhr
+            const resUrl = new URL(req.responseURL)
+            const isMyAjax = `${resUrl.pathname}` == "/projects"
+            if(!isMyAjax) {
+                return
+            } else if(req.status != 200) {
+                e.preventDefault(); return
+            } 
+
+            const params = resUrl.searchParams
+            const isSearchRequest = params.get("last") != ""
+            if(!req.responseText) {
+                if(!isSearchRequest) {
+                    e.preventDefault(); return
+                }
+
+                const prop = Alpine.$data(document.getElementById("projectListPage")) // Undocumented, see: https://github.com/alpinejs/alpine/issues/203
+                prop.setEndOfResult(true)
+            }
+        })
+    })() </script>
 }

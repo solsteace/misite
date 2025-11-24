@@ -1,45 +1,63 @@
 package persistence
 
 import (
-	"database/sql"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/solsteace/misite/internal/entity"
-	"github.com/solsteace/misite/internal/utility/lib/oops"
 )
 
 type SerieListQueryParam struct {
-	Page  int
+	Title string
+	Last  string
 	Limit int
 }
 
 func (p Pg) SerieList(param SerieListQueryParam) ([]entity.SerieList, error) {
-	if param.Limit < 1 {
-		param.Limit = 10
-	}
-	if param.Page < 1 {
-		param.Page = 1
-	}
-
-	var rows []struct {
-		Id          int    `db:"id"`
-		Name        string `db:"name"`
-		Thumbnail   string `db:"thumbnail"`
-		Description string `db:"description"`
-	}
 	query := `
 		SELECT
-			series.id,
-			series.name,
-			series.thumbnail,
-			series.description
+			id,
+			name,
+			description,
+			created_at
 		FROM series
-		ORDER BY series.id
-		LIMIT $1 OFFSET $2`
+		WHERE 
+			id > $1 
+			AND created_at >= $2
+			AND LOWER(name) LIKE $4
+		ORDER BY 
+			created_at DESC,
+			id
+		LIMIT $3`
 	args := []any{
-		param.Limit,
-		(param.Page - 1) * param.Limit}
+		0,               // $1 -> lastId
+		time.Unix(0, 0), // $2 -> lastTime
+		10,              // $3 -> limit
+		"%%"}            // $4 -> title
+	if tokens := strings.Split(param.Last, "-"); len(tokens) == 2 {
+		if lastId, err := strconv.ParseInt(tokens[1], 10, strconv.IntSize); err == nil {
+			args[0] = lastId
+		}
+		if lastTime, err := strconv.ParseInt(tokens[0], 10, strconv.IntSize); err == nil {
+			args[1] = time.Unix(0, lastTime)
+		}
+	}
+	if param.Limit > 0 {
+		args[2] = param.Limit
+	}
+	if param.Title != "" {
+		args[3] = "%" + param.Title + "%"
+	}
+
+	fmt.Println(args)
+	var rows []struct {
+		Id          int       `db:"id"`
+		Name        string    `db:"name"`
+		Description string    `db:"description"`
+		CreatedAt   time.Time `db:"created_at"`
+	}
 	if err := p.db.Select(&rows, query, args...); err != nil {
 		return []entity.SerieList{}, fmt.Errorf(
 			"persistence<Pg.Series>: %w", err)
@@ -52,8 +70,8 @@ func (p Pg) SerieList(param SerieListQueryParam) ([]entity.SerieList, error) {
 			sl := entity.SerieList{
 				Id:          r.Id,
 				Name:        r.Name,
-				Thumbnail:   r.Thumbnail,
-				Description: r.Description}
+				Description: r.Description,
+				CreatedAt:   r.CreatedAt}
 			serieList = append(serieList, sl)
 			last = &serieList[len(serieList)-1]
 		}
@@ -61,102 +79,141 @@ func (p Pg) SerieList(param SerieListQueryParam) ([]entity.SerieList, error) {
 	return serieList, nil
 }
 
-func (p Pg) Serie(id int) (entity.Serie2, error) {
-	var rows []struct {
+func (p Pg) Serie(id int) (entity.Serie, error) {
+	var row struct {
 		Id          int    `db:"id"`
 		Name        string `db:"name"`
 		Thumbnail   string `db:"thumbnail"`
 		Description string `db:"description"`
-
-		Article struct {
-			Id        sql.Null[int]       `db:"id"`
-			Title     sql.Null[string]    `db:"title"`
-			Synopsis  sql.Null[string]    `db:"synopsis"`
-			Thumbnail sql.Null[string]    `db:"thumbnail"`
-			Order     sql.Null[int]       `db:"order"`
-			CreatedAt sql.Null[time.Time] `db:"created_at"`
-		}
-		Project struct {
-			Id        sql.Null[int]    `db:"id"`
-			Name      sql.Null[string] `db:"name"`
-			Synopsis  sql.Null[string] `db:"synopsis"`
-			Thumbnail sql.Null[string] `db:"thumbnail"`
-		}
+		NArticles   int    `db:"n_articles"`
+		NProjects   int    `db:"n_projects"`
 	}
 	query := `
-		SELECT 	
+		SELECT
 			series.id,
 			series.name,
 			series.thumbnail,
 			series.description,
-			articles.id AS "article.id",
-			articles.title AS "article.title",
-			articles.subtitle AS "article.synopsis",
-			articles.thumbnail AS "article.thumbnail",
-			articles.created_at AS "article.created_at",
-			articles.serie_order AS "article.order",
-			projects.id AS "project.id",
-			projects.name AS "project.name",
-			projects.thumbnail AS "project.thumbnail",
-			projects.synopsis AS "project.synopsis"
+			COUNT(DISTINCT articles.id) AS "n_articles",
+			COUNT(DISTINCT projects.id) AS "n_projects"
 		FROM series
-		LEFT JOIN projects ON projects.devblog_serie = series.id
-		LEFT JOIN articles ON articles.serie_id = series.id
+		JOIN projects ON projects.devblog_serie = series.id
+		JOIN articles ON articles.serie_id = series.id
 		WHERE series.id = $1
-		ORDER BY articles.serie_order`
+		GROUP BY series.id`
 	args := []any{id}
-	if err := p.db.Select(&rows, query, args...); err != nil {
-		return entity.Serie2{}, fmt.Errorf(
+	if err := p.db.Get(&row, query, args...); err != nil {
+		return entity.Serie{}, fmt.Errorf(
 			"persistence<Pg.Serie>: %w", err)
-	} else if len(rows) == 0 {
-		return entity.Serie2{}, oops.NotFound{}
 	}
 
-	insertedArticles := map[int]struct{}{}
-	insertedProjects := map[int]struct{}{}
-	serie := entity.Serie2{
-		Id:          rows[0].Id,
-		Name:        rows[0].Name,
-		Thumbnail:   rows[0].Thumbnail,
-		Description: rows[0].Description}
-	for _, r := range rows {
-		if r.Article.Id.Valid {
-			article := r.Article
-			if _, ok := insertedArticles[article.Id.V]; !ok {
-				insertedArticles[article.Id.V] = struct{}{}
-				serie.Article = append(serie.Article,
-					struct {
-						Id        int
-						Title     string
-						Synopsis  string
-						Thumbnail string
-						Order     int
-						CreatedAt time.Time
-					}{
-						article.Id.V,
-						article.Title.V,
-						article.Synopsis.V,
-						article.Thumbnail.V,
-						article.Order.V,
-						article.CreatedAt.V})
-			}
-		}
-		if r.Project.Id.Valid {
-			project := r.Project
-			if _, ok := insertedProjects[project.Id.V]; !ok {
-				insertedProjects[project.Id.V] = struct{}{}
-				serie.Project = append(serie.Project, struct {
-					Id        int
-					Name      string
-					Thumbnail string
-					Synopsis  string
-				}{
-					project.Id.V,
-					project.Name.V,
-					project.Thumbnail.V,
-					project.Synopsis.V})
-			}
-		}
-	}
+	serie := entity.Serie{
+		Id:          row.Id,
+		Name:        row.Name,
+		Thumbnail:   row.Thumbnail,
+		Description: row.Description,
+		NArticle:    row.NArticles,
+		NProject:    row.NProjects}
 	return serie, nil
+}
+
+type SerieContentQueryParam struct {
+	Page  int
+	Limit int
+}
+
+func (p Pg) SerieArticleList(id int, param SerieContentQueryParam) ([]entity.SerieArticleList, error) {
+	if param.Limit < 1 {
+		param.Limit = 10
+	}
+	if param.Page < 1 {
+		param.Page = 1
+	}
+
+	var rows []struct {
+		Id        int       `db:"id"`
+		Title     string    `db:"title"`
+		Synopsis  string    `db:"synopsis"`
+		CreatedAt time.Time `db:"created_at"`
+		UpdatedAt time.Time `db:"updated_at"`
+	}
+	query := `
+		SELECT
+			id,
+			title,
+			subtitle AS "synopsis",
+			created_at,
+			updated_at
+		FROM articles
+		WHERE serie_id = $1
+		ORDER BY serie_order DESC
+		LIMIT $2 OFFSET $3`
+	args := []any{
+		id,
+		param.Limit,
+		(param.Page - 1) * param.Limit}
+	if err := p.db.Select(&rows, query, args...); err != nil {
+		return []entity.SerieArticleList{}, fmt.Errorf(
+			"persistence<Pg.SerieArticleList>: %w", err)
+	}
+
+	var serieArticles []entity.SerieArticleList
+	for _, r := range rows {
+		serieArticles = append(
+			serieArticles, entity.SerieArticleList{
+				Id:        r.Id,
+				Title:     r.Title,
+				Synopsis:  r.Synopsis,
+				CreatedAt: r.CreatedAt,
+				UpdatedAt: r.UpdatedAt,
+			})
+	}
+	return serieArticles, nil
+}
+
+func (p Pg) SerieProjectList(id int, param SerieContentQueryParam) ([]entity.SerieProjectList, error) {
+	if param.Limit < 1 {
+		param.Limit = 10
+	}
+	if param.Page < 1 {
+		param.Page = 1
+	}
+	var rows []struct {
+		Id        int       `db:"id"`
+		Name      string    `db:"name"`
+		Synopsis  string    `db:"synopsis"`
+		CreatedAt time.Time `db:"created_at"`
+		UpdatedAt time.Time `db:"updated_at"`
+	}
+	query := `
+		SELECT
+			id,
+			name,
+			synopsis,
+			created_at,
+			updated_at
+		FROM projects
+		WHERE devblog_serie = $1
+		LIMIT $2 OFFSET $3`
+	args := []any{
+		id,
+		param.Limit,
+		(param.Page - 1) * param.Limit}
+	if err := p.db.Select(&rows, query, args...); err != nil {
+		return []entity.SerieProjectList{}, fmt.Errorf(
+			"persistence<Pg.SerieProjectList>: %w", err)
+	}
+
+	var serieProjects []entity.SerieProjectList
+	for _, r := range rows {
+		serieProjects = append(
+			serieProjects, entity.SerieProjectList{
+				Id:        r.Id,
+				Name:      r.Name,
+				Synopsis:  r.Synopsis,
+				CreatedAt: r.CreatedAt,
+				UpdatedAt: r.UpdatedAt,
+			})
+	}
+	return serieProjects, nil
 }

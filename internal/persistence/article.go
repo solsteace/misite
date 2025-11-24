@@ -3,6 +3,8 @@ package persistence
 import (
 	"database/sql"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/solsteace/misite/internal/entity"
@@ -10,72 +12,90 @@ import (
 )
 
 type ArticlesQueryParam struct {
-	Page    int
-	Limit   int
-	TagId   []int
-	SerieId []int
+	Limit int
+	Last  string
+	Tag   []string
+	Serie []string
 }
 
 func (p Pg) Articles(param ArticlesQueryParam) ([]entity.ArticleList, error) {
 	query := `
-		WITH 
-			matching_articles_by_tag AS ( 
-				SELECT 
-					article_id, 
-					COUNT(DISTINCT tag_id) AS "n_tag"
-				FROM article_tags
-				WHERE 
-					($1::int[] IS NULL) 
-					OR tag_id = ANY($1)
-				GROUP BY article_id
-				HAVING
-					($1::int[] IS NULL)
-					OR COUNT(tag_id) = CARDINALITY($1)
-				LIMIT $3 OFFSET $4)
 		SELECT
-			articles.id AS "id",
-			articles.title AS "title",
-			articles.subtitle AS "subtitle",
-			articles.thumbnail AS "thumbnail",
-			articles.created_at AS "created_at",
+			articles.id,
+			articles.title,
+			articles.subtitle,
+			articles.created_at,
+			articles.updated_at,
 			tags.id AS "tag.id",
 			tags.name AS "tag.name",
 			series.id AS "serie.id",
 			series.name AS "serie.name"
-		FROM articles
+		FROM (
+			SELECT *
+			FROM articles
+			WHERE
+				id > $1 
+				AND updated_at >= $2
+				AND ($4::VARCHAR[] IS NULL
+					OR EXISTS (
+						SELECT 1
+						FROM article_tags
+						JOIN tags ON article_tags.tag_id = tags.id
+						WHERE 
+							article_tags.article_id = articles.id
+							AND LOWER(tags.name) = ANY($4)
+						GROUP BY article_id
+						HAVING COUNT(DISTINCT tag_id) = CARDINALITY($4)))
+				AND ($5::VARCHAR[] IS NULL 
+					OR EXISTS(
+						SELECT 1
+						FROM articles AS temp_articles
+						JOIN series ON series.id = articles.serie_id
+						WHERE
+							temp_articles.id = articles.id
+							AND LOWER(series.name) = ANY($5)))
+			ORDER BY
+				updated_at DESC,
+				id
+			LIMIT $3
+		) AS articles
 		LEFT JOIN article_tags ON article_tags.article_id = articles.id
 		LEFT JOIN tags ON article_tags.tag_id = tags.id
 		LEFT JOIN series ON articles.serie_id = series.id
-		WHERE 
-			(SELECT true
-				FROM matching_articles_by_tag
-				WHERE matching_articles_by_tag.article_id = articles.id)
-			AND ($2::int[] IS NULL OR articles.serie_id = ANY($2))
-		ORDER BY articles.id`
-	if param.Limit < 1 {
-		param.Limit = 10
-	}
-	if param.Page < 1 {
-		param.Page = 1
-	}
+		ORDER BY 
+			articles.updated_at DESC, 
+			id`
 	args := []any{
-		nil,
-		nil,
-		param.Limit,
-		(param.Page - 1) * param.Limit}
-	if len(param.TagId) > 0 {
-		args[0] = param.TagId
+		0,               // $1 -> lastId
+		time.Unix(0, 0), // $2 -> lastTime
+		10,              // $3 -> limit
+		nil,             // $4 -> tag filter
+		nil,             // $5 -> serie filter
 	}
-	if len(param.SerieId) > 0 {
-		args[1] = param.SerieId
+	if tokens := strings.Split(param.Last, "-"); len(tokens) == 2 {
+		if lastId, err := strconv.ParseInt(tokens[1], 10, strconv.IntSize); err == nil {
+			args[0] = lastId
+		}
+		if lastTime, err := strconv.ParseInt(tokens[0], 10, strconv.IntSize); err == nil {
+			args[1] = time.Unix(0, lastTime)
+		}
+	}
+	if param.Limit > 0 {
+		args[2] = param.Limit
+	}
+	if len(param.Tag) > 0 {
+		args[3] = param.Tag
+	}
+	if len(param.Serie) > 0 {
+		args[4] = param.Serie
 	}
 
 	var rows []struct {
 		Id        int       `db:"id"`
 		Title     string    `db:"title"`
 		Subtitle  string    `db:"subtitle"`
-		Thumbnail string    `db:"thumbnail"`
 		CreatedAt time.Time `db:"created_at"`
+		UpdatedAt time.Time `db:"updated_at"`
 
 		Serie struct {
 			Id   sql.Null[int]    `db:"id"`
@@ -103,8 +123,8 @@ func (p Pg) Articles(param ArticlesQueryParam) ([]entity.ArticleList, error) {
 				Id:        r.Id,
 				Title:     r.Title,
 				Subtitle:  r.Subtitle,
-				Thumbnail: r.Thumbnail,
-				CreatedAt: r.CreatedAt})
+				CreatedAt: r.CreatedAt,
+				UpdatedAt: r.UpdatedAt})
 			lastArticle = &articles[len(articles)-1]
 		}
 		if r.Serie.Id.Valid {
@@ -134,8 +154,8 @@ func (p Pg) Article(id int) (entity.Article, error) {
 			articles.title AS "title",
 			articles.subtitle AS "subtitle",
 			articles.content AS "content",
-			articles.thumbnail AS "thumbnail",
 			articles.created_at AS "created_at",
+			articles.updated_at AS "updated_at",
 			tags.id AS "tag.id",
 			tags.name AS "tag.name",
 			series.id AS "serie.id",
@@ -152,8 +172,8 @@ func (p Pg) Article(id int) (entity.Article, error) {
 		Title     string    `db:"title"`
 		Subtitle  string    `db:"subtitle"`
 		Content   string    `db:"content"`
-		Thumbnail string    `db:"thumbnail"`
 		CreatedAt time.Time `db:"created_at"`
+		UpdatedAt time.Time `db:"updated_at"`
 
 		Serie struct {
 			Id   sql.Null[int]    `db:"id"`
@@ -177,8 +197,8 @@ func (p Pg) Article(id int) (entity.Article, error) {
 		Title:     rows[0].Title,
 		Subtitle:  rows[0].Subtitle,
 		Content:   rows[0].Content,
-		Thumbnail: rows[0].Thumbnail,
-		CreatedAt: rows[0].CreatedAt}
+		CreatedAt: rows[0].CreatedAt,
+		UpdatedAt: rows[0].UpdatedAt}
 	insertedTags := map[int]struct{}{}
 	for _, r := range rows {
 		if r.Serie.Id.Valid {
