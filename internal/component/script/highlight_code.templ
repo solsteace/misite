@@ -1,0 +1,40 @@
+package script
+
+templ LoadShiki() {
+    <script type="module">
+        import { codeToHtml } from 'https://esm.sh/shiki@3.0.0'
+
+        window._utilHighlightCode = async() => {
+            const codeblocks = document.getElementsByClassName("codeblock__code")
+            for (const cb of codeblocks) {
+                const codes = cb.getElementsByTagName("code")
+                const canSkip = (
+                    codes.length < 1 
+                    || codes[0].parentElement.classList.contains("shiki"))
+                if(canSkip) {
+                    return
+                }
+
+                cb.parentElement.innerHTML = await codeToHtml(
+                    codes[0].textContent, 
+                    {
+                        lang: cb.parentElement.dataset.lang,
+                        themes: {
+                            light: 'github-light',
+                            dark: 'catppuccin-mocha' 
+                        },
+                        transformers: [{
+                            pre(node) {
+                                this.addClassToHast(node, "codeblock__code")
+                            }
+                        }]
+                })
+                .catch(err => { // fallback to default
+                    console.error(err)
+                    return cb.parentElement.innerHTML
+                })
+            }
+        }
+        document.dispatchEvent(new Event("site:shiki-loaded"))
+    </script>
+}

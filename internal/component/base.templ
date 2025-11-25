@@ -1,19 +1,25 @@
 package component
 
 import "github.com/solsteace/misite/internal/component/page"
+import "github.com/solsteace/misite/internal/component/script"
 
-var setListenerOnce = templ.NewOnceHandle()
+var preScript = templ.NewOnceHandle()
+var postScript = templ.NewOnceHandle()
 
 templ Base(alpinejsUrl, htmxUrl string) {
     <!DOCTYPE html>
     <html>
         <head>
             <link rel="stylesheet" href="/static/style.css" />
-            
+
             // Noice fonts: Roboto, Lexend
             <link rel="preconnect" href="https://fonts.googleapis.com">
             <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-            <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+            <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Red+Hat+Mono:ital,wght@0,300..700;1,300..700&display=swap&family=SUSE+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet">
+
+            @preScript.Once() {
+                @script.LoadShiki()
+            }
 
             <script src="/static/pre.js"></script>
             <script defer src={alpinejsUrl}></script>
@@ -56,6 +62,13 @@ templ Base(alpinejsUrl, htmxUrl string) {
                                 hx-trigger="click"
                             > Series </a>
                         </li>
+                        <li>
+                            <a
+                                href="/write?for=project"
+                                hx-get="/write?for=project"
+                                hx-trigger="click"
+                            > test </a>
+                        </li>
                     </ul>
                 </nav>
 
@@ -79,7 +92,7 @@ templ Base(alpinejsUrl, htmxUrl string) {
         </body>
 
         <script src="/static/post.js"></script>
-        @setListenerOnce.Once() {
+        @postScript.Once() {
             @page.ArticleListScript()
             @page.ProjectListScript()
             @page.SerieListScript()
