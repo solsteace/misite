@@ -36,6 +36,7 @@ go.work.sum
 # Custom
 # =======================
 # Temporary files
+node_modules/
 tmp/
 
 # Static files

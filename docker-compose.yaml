@@ -10,6 +10,14 @@ services:
     env_file:
       - path: "./internal/.env"
         required: true
+  jsdev:
+    volumes:
+      - ./package.json:/temp/dev/package.json
+      - ./internal/component/script:/temp/dev/script
+      - ./static:/temp/dev/out
+    build:
+      dockerfile: ./Dockerfile
+      target: ts-watcher
   db:
     image: postgres:alpine
     volumes:

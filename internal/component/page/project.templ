@@ -16,14 +16,14 @@ templ Project(project entity.Project) {
                 <p> {project.DisplayTime()} </p>
             </div>
 
-            <div class="specification__extra">
-                if len(project.Link) > 0 {
+            if len(project.Link) > 0 {
+                <div class="specification__extra">
                     <b class="u__h--6"> Links </b>
                     for _, l := range project.Link {
                         <a href={l.Url}> {l.DisplayText} </a>
                     }
-                }
-            </div>
+                </div>
+            }
 
             <div class="cmp__sticky">
                 <div class="cmp__sticky-elem specification__extra specification__outline">
@@ -73,14 +73,19 @@ templ Project(project entity.Project) {
                 </ul>
             </header>
 
-            @templ.Raw(project.Description)
+            <div class="specification__content-body">
+                @templ.Raw(project.Description)
+            </div>
         </article>
 
-        @templ.JSUnsafeFuncCall(` window.scroll({ top: 0, left: 0, behavior: "smooth" })`)
         @templ.JSUnsafeFuncCall(
             fmt.Sprintf(
-                "makeArticleOutline('%s', '%s')", 
+                "window._utilMakeOutline('%s', '%s')", 
                 projectHtmlId, 
                 fmt.Sprintf("outline-%s", projectHtmlId)))
+        <script> 
+            window.scroll({ top: 0, left: 0, behavior: "smooth" })
+            window._utilHighlightCode() 
+        </script>
     </div>
 }

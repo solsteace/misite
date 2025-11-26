@@ -1,8 +1,10 @@
 package page
 
+import "net/url"
+
 templ Home(indexUrl string) {
     <span 
-        hx-get={indexUrl}
+        hx-get={url.JoinPath(indexUrl, "index.html")}
         hx-trigger="load"
         hx-replace-url="false"
         hx-push-url="false"

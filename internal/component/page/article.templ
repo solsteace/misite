@@ -64,14 +64,19 @@ templ Article(article entity.Article) {
                 </ul>
             </header>
 
-            @templ.Raw(article.Content)
+            <div class="specification__content-body">
+                @templ.Raw(article.Content)
+            </div>
         </article>
 
-        @templ.JSUnsafeFuncCall(` window.scroll({ top: 0, left: 0, behavior: "smooth" })`)
         @templ.JSUnsafeFuncCall(
             fmt.Sprintf(
-                "makeArticleOutline('%s', '%s')", 
+                "window._utilMakeOutline('%s', '%s')", 
                 articleHtmlIdentifier, 
                 fmt.Sprintf("outline-%s", articleHtmlIdentifier)))
+        <script> 
+            window.scroll({ top: 0, left: 0, behavior: "smooth" })
+            window._utilHighlightCode() 
+        </script>
     </div>
 }
