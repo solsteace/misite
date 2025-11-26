@@ -36,12 +36,12 @@ go.work.sum
 # Custom
 # =======================
 # Temporary files
+node_modules/
 tmp/
 
 # Static files
-static/index.html
-static/test*.html
-static/vendor/**
+static/**
+!static/style.css
 !static/vendor/.gitkeep
 
 # Generated files

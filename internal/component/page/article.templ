@@ -71,18 +71,12 @@ templ Article(article entity.Article) {
 
         @templ.JSUnsafeFuncCall(
             fmt.Sprintf(
-                "makeArticleOutline('%s', '%s')", 
+                "window._utilMakeOutline('%s', '%s')", 
                 articleHtmlIdentifier, 
                 fmt.Sprintf("outline-%s", articleHtmlIdentifier)))
         <script> 
             window.scroll({ top: 0, left: 0, behavior: "smooth" })
-            if(!window._utilHighlightCode) {
-                document.addEventListener("site:shiki-loaded", (e) => {
-                    window._utilHighlightCode() 
-                }, {once: true})
-            } else {
-                window._utilHighlightCode() 
-            }
+            window._utilHighlightCode() 
         </script>
     </div>
 }
