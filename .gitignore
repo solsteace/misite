@@ -41,6 +41,7 @@ tmp/
 
 # Static files
 static/vendor/**
+static/test*
 !static/vendor/.gitkeep
 
 # Generated files
