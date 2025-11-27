@@ -1,4 +1,4 @@
-import { codeToHast, codeToHtml } from "./generated/shiki.bundle";
+import {codeToHtml } from "./generated/shiki.bundle";
 
 function findArticleHeaders(targetElement: Element) {
     const headerTags = ["h2", "h3", "h4", "h5", "h6"] as const;

@@ -1,11 +1,13 @@
 package route
 
 import (
-	"encoding/json"
+	"context"
+	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/solsteace/misite/internal/controller"
 	"github.com/solsteace/misite/internal/utility/lib/oops/adapter"
 )
@@ -24,22 +26,18 @@ func NewRouter(handler controller.Controller) Router {
 func (r Router) Handle(fx httpHandlerWithError) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		if err := fx(w, req); err != nil {
-			log.Println(err)
-			statusCode := adapter.HttpStatusCode(err)
-			switch statusCode {
+			ctx := req.Context()
+			switch statusCode := adapter.HttpStatusCode(err); statusCode {
 			case http.StatusNotFound:
-				r.handler.NotFound(w, req)
+				ctx = context.WithValue(ctx, "err", statusCode)
 			default:
-				msg := adapter.HttpErrorMsg(err)
-				payload := map[string]any{"msg": msg}
-				resPayload, err := json.Marshal(payload)
-				if err != nil {
-					resPayload = []byte("Something went wrong in our system")
-				}
-
-				w.WriteHeader(statusCode)
-				w.Write(resPayload)
+				ctx = context.WithValue(ctx, "err", http.StatusInternalServerError)
 			}
+			ctx = context.WithValue(ctx, "msg",
+				fmt.Sprintf("RequestId: %s", middleware.GetReqID(ctx)))
+
+			log.Println(err)
+			r.handler.Error(w, req.WithContext(ctx))
 		}
 	}
 }
@@ -65,6 +63,6 @@ func (r Router) UseOn(parent *chi.Mux) {
 	router.Get("/projects", r.Handle(r.handler.ProjectList))
 	router.Get("/home", r.Handle(r.handler.Home))
 	router.Get("/", r.Handle(r.handler.Home))
-	router.NotFound(r.Handle(r.handler.NotFound))
+	router.NotFound(r.Handle(r.handler.Error))
 	parent.Mount("/", router)
 }
