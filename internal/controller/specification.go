@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -14,7 +15,11 @@ import (
 func (c Controller) Article(w http.ResponseWriter, r *http.Request) error {
 	articleId, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, strconv.IntSize)
 	if err != nil {
-		return fmt.Errorf("controller.Article: %w", err)
+		if errors.Is(err, strconv.ErrSyntax) {
+			articleId = -1
+		} else {
+			return fmt.Errorf("controller.Article: %w", err)
+		}
 	}
 
 	article, err := c.service.Article(int(articleId))
@@ -36,7 +41,11 @@ func (c Controller) Article(w http.ResponseWriter, r *http.Request) error {
 func (c Controller) Project(w http.ResponseWriter, r *http.Request) error {
 	projectId, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, strconv.IntSize)
 	if err != nil {
-		return fmt.Errorf("controller.Project: %w", err)
+		if errors.Is(err, strconv.ErrSyntax) {
+			projectId = -1
+		} else {
+			return fmt.Errorf("controller.Project: %w", err)
+		}
 	}
 
 	project, err := c.service.Project(int(projectId))
@@ -58,7 +67,11 @@ func (c Controller) Project(w http.ResponseWriter, r *http.Request) error {
 func (c Controller) Serie(w http.ResponseWriter, r *http.Request) error {
 	serieId, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, strconv.IntSize)
 	if err != nil {
-		return fmt.Errorf("controller.Serie: %w", err)
+		if errors.Is(err, strconv.ErrSyntax) {
+			serieId = -1
+		} else {
+			return fmt.Errorf("controller.Serie: %w", err)
+		}
 	}
 
 	// TODO: use workers

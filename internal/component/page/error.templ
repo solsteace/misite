@@ -1,0 +1,31 @@
+package page
+
+import "math/rand/v2"
+import "net/http"
+
+templ Error(code int, msg string) {
+    <div class="error">
+        if code >= http.StatusBadRequest || code < 600 {
+            <p class="error__code"> {code} </p>
+            <p class="error__message"> 
+                if code == http.StatusNotFound {
+                    if msgIdx := rand.Int() % 3; msgIdx == 0 {
+                        Where are you going, man? 
+                    } else if msgIdx == 1 {
+                        Didn't found that, sorry
+                    } else {
+                        Perhaps one day there would be something here...
+                    }
+                } else {
+                    It's an unknown error
+                }
+            </p>
+        } else {
+            <p class="error__code"> ᐛ </p>
+            <p class="error__message"> 
+                Wait, that ain't an error... whoops, sorry
+            </p>
+        }
+        <p class="error__additional-message"> {msg} </p>
+    </div>
+}
