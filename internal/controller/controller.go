@@ -72,7 +72,7 @@ func (c Controller) Error(w http.ResponseWriter, r *http.Request) error {
 	ctx := r.Context()
 	extraMesssage, ok := ctx.Value("msg").(string)
 	if !ok {
-		extraMesssage = "additinal info missing, sorry"
+		extraMesssage = "additional info missing, sorry"
 	}
 	code, ok := ctx.Value("err").(int)
 	if !ok {

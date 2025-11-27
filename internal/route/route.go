@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/solsteace/misite/internal/controller"
+	"github.com/solsteace/misite/internal/utility/lib/oops"
 	"github.com/solsteace/misite/internal/utility/lib/oops/adapter"
 )
 
@@ -63,6 +64,9 @@ func (r Router) UseOn(parent *chi.Mux) {
 	router.Get("/projects", r.Handle(r.handler.ProjectList))
 	router.Get("/home", r.Handle(r.handler.Home))
 	router.Get("/", r.Handle(r.handler.Home))
-	router.NotFound(r.Handle(r.handler.Error))
+	router.NotFound(r.Handle(
+		func(w http.ResponseWriter, r *http.Request) error {
+			return oops.NotFound{}
+		}))
 	parent.Mount("/", router)
 }
