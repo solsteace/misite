@@ -719,6 +719,28 @@ h5, .u__h--5 {
 }
 
 
+.error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.error > * {
+    text-align: center;
+}
+.error__code {
+    color: var(--color-primary);
+    font-weight: bold;
+    font-size: 8rem;
+}
+.error__message {
+    font-size: 2rem;
+}
+.error__additional-message {
+    opacity: 50%;
+    font-style: italic;
+    font-size: 0.875rem;
+}
+
 /* Third party */
 :root[data-site-theme="dark"] .shiki,
 :root[data-site-theme="dark"] .shiki span {

@@ -68,15 +68,23 @@ func (c Controller) Home(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func (c Controller) NotFound(w http.ResponseWriter, r *http.Request) error {
-	pageComponent := page.NotFound()
-	w.WriteHeader(http.StatusNotFound)
+func (c Controller) Error(w http.ResponseWriter, r *http.Request) error {
+	ctx := r.Context()
+	extraMesssage, ok := ctx.Value("msg").(string)
+	if !ok {
+		extraMesssage = "additinal info missing, sorry"
+	}
+	code, ok := ctx.Value("err").(int)
+	if !ok {
+		code = http.StatusInternalServerError
+	}
+	pageComponent := page.Error(code, extraMesssage)
 	if !c.isAppRequest(r) {
 		if err := c.serveWithBase(pageComponent, w, r); err != nil {
-			return fmt.Errorf("controller.NotFound: %w", err)
+			return fmt.Errorf("controller.Error: %w", err)
 		}
 	} else if err := pageComponent.Render(context.Background(), w); err != nil {
-		return fmt.Errorf("controller.NotFound: %w", err)
+		return fmt.Errorf("controller.Error: %w", err)
 	}
 	return nil
 }
