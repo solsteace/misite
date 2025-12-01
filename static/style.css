@@ -60,7 +60,7 @@ body {
     margin: 0px;
     padding: 0px;
     font-size: 1rem;
-    font-family: "lexend", system-ui;
+    font-family: "Saira", system-ui;
     box-sizing: border-box;
     scroll-behavior: smooth;
     transition: all 0.333s;
@@ -80,6 +80,11 @@ p {
 button {
     border: 0px solid black;
     background: var(--col-transparent);
+}
+code {
+    background: hsl(from var(--bg-color) h calc(s - 80) calc(l + 12) / 100%);
+    padding: 0px var(--gap-tiny);
+    font-family: "SUSE Mono", monospace;
 }
 
 /* ====================
@@ -462,13 +467,13 @@ h5, .u__h--5 {
     display: flex;
     flex-direction: column;
     gap: var(--gap-small);
+    padding-left: var(--gap-medium);
 }
-.specification__content-body li {
+.specification__content-body ul li {
     list-style: square;
-    list-style-position: inside;
 }
 .specification__content blockquote {
-    background: rgba(0, 0, 0, 60%);
+    background: hsl(from var(--bg-color) h s calc(l + 3) / 100%);
     padding: var(--gap-medium);
 }
 .specification__content .blockquote--info {
@@ -483,23 +488,10 @@ h5, .u__h--5 {
 .specification__content-body .codeblock {
     position: relative;
 }
-.specification__content-body .codeblock__extras {
-    padding: var(--gap-tiny) var(--gap-small);
-    background: var(--bg-color);
-    position: absolute;
-    top: var(--gap-small);
-    right: var(--gap-small);
-    border: 1px solid var(--color-primary-sw1);
-    font-size: 0.875rem;
-}
-.specification__content-body .codeblock__extras:hover {
-    filter: invert(100%);
-    cursor: pointer;
-}
 .specification__content-body .codeblock__code {
     max-width: 100%;
     width: 100%;
-    background: black;
+    background: hsl(from var(--bg-color) h s calc(l + 3) / 100%);
     padding: var(--gap-medium);
     display: block;
 
@@ -507,7 +499,8 @@ h5, .u__h--5 {
     min-width: 0;
 }
 .specification__content-body .codeblock__code code {
-    font-family: "SUSE Mono", system-ui;
+    padding: 0px;
+    text-decoration: none;
 }
 .specification__content-body .codeblock__code::-webkit-scrollbar {
     height: var(--gap-tiny);
