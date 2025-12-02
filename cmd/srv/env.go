@@ -1,4 +1,4 @@
-package internal
+package main
 
 import (
 	"os"
@@ -13,7 +13,7 @@ var (
 	hTMX_URL   string
 )
 
-func LoadEnv() {
+func loadEnv() {
 	dB_URL = os.Getenv("DB_URL")
 	iNDEX_URL = os.Getenv("INDEX_URL")
 	if iNDEX_URL == "" {

@@ -4,7 +4,7 @@ root = "."
     include_ext = ["go", "templ"]
     exclude_dir = ["static"]
     exclude_regex = [".*_templ.go"]
-    cmd = "templ generate & go build -o ./tmp/out ./cmd"
+    cmd = "templ generate & go build -o ./tmp/out ./cmd/srv"
     bin = "./tmp/out"
 [log]
     time = true

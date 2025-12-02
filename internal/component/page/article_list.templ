@@ -6,7 +6,7 @@ import "net/url"
 import "strings"
 import "github.com/solsteace/misite/internal/utility/api"
 
-templ ArticleList(article []entity.ArticleList) {
+templ ArticleList(article []entity.ArticleListPage) {
     <div 
         id="articleListPage"
         class="lyt__1x2 lyt__1x2--1-3 exploration"
@@ -55,7 +55,7 @@ templ ArticleList(article []entity.ArticleList) {
                                 stroke-linecap="round"
                             />
                         </svg>
-                    </button> // make SVG magnifying glass
+                    </button>
                 </form>
 
                 <div class="u__dim exploration__search-alternative">
@@ -100,7 +100,7 @@ templ ArticleList(article []entity.ArticleList) {
     </div>
 }
 
-templ Articles(article []entity.ArticleList) {
+templ Articles(article []entity.ArticleListPage) {
     for idx, a := range article {
         <div 
             if entity.ArticleIsNew(a.CreatedAt) {

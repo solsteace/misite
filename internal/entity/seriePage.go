@@ -3,7 +3,7 @@ package entity
 import "time"
 
 // The model for viewing `serie` entry in `serie` page
-type Serie struct {
+type SeriePage struct {
 	Id          int
 	NArticle    int
 	NProject    int
@@ -14,7 +14,7 @@ type Serie struct {
 
 // Articles associated with the serie sorted in
 // ascending order by their appearance on the serie
-type SerieArticleList struct {
+type SeriePageArticleList struct {
 	Id        int
 	Title     string
 	Synopsis  string
@@ -23,7 +23,7 @@ type SerieArticleList struct {
 }
 
 // Project associated with the serie
-type SerieProjectList struct {
+type SeriePageProjectList struct {
 	Id        int
 	Name      string
 	Synopsis  string
@@ -32,7 +32,7 @@ type SerieProjectList struct {
 }
 
 // The model for viewing `serie` entry in `serie_list` page
-type SerieList struct {
+type SerieListPage struct {
 	Id          int
 	Name        string
 	Description string
@@ -40,6 +40,6 @@ type SerieList struct {
 }
 
 // A serie entry is considered new for 5 days after its initial creation
-func (sl SerieList) IsNew() bool {
-	return time.Now().Sub(sl.CreatedAt) < time.Hour*24*5
+func (sl SerieListPage) IsNew() bool {
+	return time.Since(sl.CreatedAt) < time.Hour*24*5
 }

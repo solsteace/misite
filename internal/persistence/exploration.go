@@ -11,7 +11,7 @@ type TagQueryParams struct {
 	Limit int
 }
 
-func (p Pg) ArticleTags(param TagQueryParams) ([]entity.TagStat, error) {
+func (p Pg) ArticleTags(param TagQueryParams) ([]entity.TagStatPage, error) {
 	query := `
 		SELECT 
 			tags.id,
@@ -38,13 +38,13 @@ func (p Pg) ArticleTags(param TagQueryParams) ([]entity.TagStat, error) {
 		Count int    `db:"count"`
 	}
 	if err := p.db.Select(&rows, query, args...); err != nil {
-		return []entity.TagStat{}, fmt.Errorf(
+		return []entity.TagStatPage{}, fmt.Errorf(
 			"persistence<Pg.ArticleTags>: %w", err)
 	}
 
-	var tagStat []entity.TagStat
+	var tagStat []entity.TagStatPage
 	for _, r := range rows {
-		tagStat = append(tagStat, entity.TagStat{
+		tagStat = append(tagStat, entity.TagStatPage{
 			Id:    r.Id,
 			Name:  r.Name,
 			Count: r.Count})
@@ -52,7 +52,7 @@ func (p Pg) ArticleTags(param TagQueryParams) ([]entity.TagStat, error) {
 	return tagStat, nil
 }
 
-func (p Pg) ProjectTags(param TagQueryParams) ([]entity.TagStat, error) {
+func (p Pg) ProjectTags(param TagQueryParams) ([]entity.TagStatPage, error) {
 	query := `
 		SELECT
 			tags.id,
@@ -79,13 +79,13 @@ func (p Pg) ProjectTags(param TagQueryParams) ([]entity.TagStat, error) {
 		Count int    `db:"count"`
 	}
 	if err := p.db.Select(&rows, query, args...); err != nil {
-		return []entity.TagStat{}, fmt.Errorf(
+		return []entity.TagStatPage{}, fmt.Errorf(
 			"persistence<Pg.ProjectTags>: %w", err)
 	}
 
-	var tagStat []entity.TagStat
+	var tagStat []entity.TagStatPage
 	for _, r := range rows {
-		tagStat = append(tagStat, entity.TagStat{
+		tagStat = append(tagStat, entity.TagStatPage{
 			Id:    r.Id,
 			Name:  r.Name,
 			Count: r.Count})

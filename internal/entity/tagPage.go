@@ -5,7 +5,7 @@ type Tag struct {
 	Name string
 }
 
-type TagStat struct {
+type TagStatPage struct {
 	Id    int
 	Count int
 	Name  string

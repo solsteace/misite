@@ -6,7 +6,7 @@ import "net/url"
 import "strings"
 import "fmt"
 
-templ Tags(by string, tags []entity.TagStat) {
+templ Tags(by string, tags []entity.TagStatPage) {
     <section class="tagList">
         {{
         currentFirst := byte(0)

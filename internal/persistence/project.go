@@ -18,7 +18,7 @@ type ProjectsQueryParam struct {
 	Serie []string
 }
 
-func (p Pg) Projects(param ProjectsQueryParam) ([]entity.ProjectList, error) {
+func (p Pg) Projects(param ProjectsQueryParam) ([]entity.ProjectListPage, error) {
 	query := `
 		SELECT
 		   	projects.id,
@@ -107,19 +107,19 @@ func (p Pg) Projects(param ProjectsQueryParam) ([]entity.ProjectList, error) {
 		}
 	}
 	if err := p.db.Select(&rows, query, args...); err != nil {
-		return []entity.ProjectList{}, fmt.Errorf(
+		return []entity.ProjectListPage{}, fmt.Errorf(
 			"persistence<Pg.Projects>: %w", err)
 	} else if len(rows) == 0 {
-		return []entity.ProjectList{}, nil
+		return []entity.ProjectListPage{}, nil
 	}
 
-	var projects []entity.ProjectList
-	var lastProject *entity.ProjectList
+	var projects []entity.ProjectListPage
+	var lastProject *entity.ProjectListPage
 	var insertedTag map[int]struct{}
 	for _, r := range rows {
 		if lastProject == nil || lastProject.Id != r.Id {
 			insertedTag = map[int]struct{}{}
-			projects = append(projects, entity.ProjectList{
+			projects = append(projects, entity.ProjectListPage{
 				Id:        r.Id,
 				Name:      r.Name,
 				Synopsis:  r.Synopsis,
@@ -150,7 +150,7 @@ func (p Pg) Projects(param ProjectsQueryParam) ([]entity.ProjectList, error) {
 	return projects, nil
 }
 
-func (p Pg) Project(id int) (entity.Project, error) {
+func (p Pg) Project(id int) (entity.ProjectPage, error) {
 	query := `
 		SELECT
 			projects.id AS "id",
@@ -198,15 +198,15 @@ func (p Pg) Project(id int) (entity.Project, error) {
 		}
 	}
 	if err := p.db.Select(&rows, query, args...); err != nil {
-		return entity.Project{}, fmt.Errorf(
+		return entity.ProjectPage{}, fmt.Errorf(
 			"persistence<pg.Project>: %w", err)
 	} else if len(rows) == 0 {
-		return entity.Project{}, fmt.Errorf(
+		return entity.ProjectPage{}, fmt.Errorf(
 			"persistence<pg.Project>: %w", oops.NotFound{})
 	}
 
 	projectRow := rows[0]
-	project := entity.Project{
+	project := entity.ProjectPage{
 		Id:          projectRow.Id,
 		Name:        projectRow.Name,
 		Synopsis:    projectRow.Synopsis,

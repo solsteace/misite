@@ -8,7 +8,7 @@ services:
       dockerfile: ./Dockerfile
       target: devel
     env_file:
-      - path: "./internal/.env"
+      - path: "./cmd/srv/.env"
         required: true
   jsdev:
     volumes:

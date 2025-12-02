@@ -4,9 +4,9 @@ import "github.com/solsteace/misite/internal/entity"
 import "fmt"
 
 templ Serie(
-    serie entity.Serie, 
-    articles []entity.SerieArticleList, 
-    projects []entity.SerieProjectList,
+    serie entity.SeriePage, 
+    articles []entity.SeriePageArticleList, 
+    projects []entity.SeriePageProjectList,
 ) {
     <div class="serie">
         <header class="lyt__1x2 lyt__1x2--1-1">
@@ -44,7 +44,7 @@ templ Serie(
     </div>
 }
 
-templ SerieArticles(articles []entity.SerieArticleList) {
+templ SerieArticles(articles []entity.SeriePageArticleList) {
     if nArticle := len(articles); nArticle > 0 {
         <div class="cmp__list">
             for idx, a := range articles {
@@ -82,7 +82,7 @@ templ SerieArticles(articles []entity.SerieArticleList) {
     }
 }
 
-templ SerieProjects(projects []entity.SerieProjectList) {
+templ SerieProjects(projects []entity.SeriePageProjectList) {
     if nProject := len(projects); nProject > 0 {
         <div class="cmp__list">
             for idx, p := range projects {

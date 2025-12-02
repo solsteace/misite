@@ -18,7 +18,7 @@ type ArticlesQueryParam struct {
 	Serie []string
 }
 
-func (p Pg) Articles(param ArticlesQueryParam) ([]entity.ArticleList, error) {
+func (p Pg) Articles(param ArticlesQueryParam) ([]entity.ArticleListPage, error) {
 	query := `
 		SELECT
 			articles.id,
@@ -107,19 +107,19 @@ func (p Pg) Articles(param ArticlesQueryParam) ([]entity.ArticleList, error) {
 		}
 	}
 	if err := p.db.Select(&rows, query, args...); err != nil {
-		return []entity.ArticleList{}, fmt.Errorf(
+		return []entity.ArticleListPage{}, fmt.Errorf(
 			"persistence<Pg.Articles>: %s", err)
 	} else if len(rows) == 0 {
-		return []entity.ArticleList{}, nil
+		return []entity.ArticleListPage{}, nil
 	}
 
-	var articles []entity.ArticleList
-	var lastArticle *entity.ArticleList
+	var articles []entity.ArticleListPage
+	var lastArticle *entity.ArticleListPage
 	var insertedTags map[int]struct{}
 	for _, r := range rows {
 		if lastArticle == nil || lastArticle.Id != r.Id {
 			insertedTags = map[int]struct{}{}
-			articles = append(articles, entity.ArticleList{
+			articles = append(articles, entity.ArticleListPage{
 				Id:        r.Id,
 				Title:     r.Title,
 				Subtitle:  r.Subtitle,
@@ -147,7 +147,7 @@ func (p Pg) Articles(param ArticlesQueryParam) ([]entity.ArticleList, error) {
 	return articles, nil
 }
 
-func (p Pg) Article(id int) (entity.Article, error) {
+func (p Pg) Article(id int) (entity.ArticlePage, error) {
 	query := `
 		SELECT
 			articles.id AS "id",
@@ -185,14 +185,14 @@ func (p Pg) Article(id int) (entity.Article, error) {
 		}
 	}
 	if err := p.db.Select(&rows, query, args...); err != nil {
-		return entity.Article{}, fmt.Errorf(
+		return entity.ArticlePage{}, fmt.Errorf(
 			"persistence<Pg.Article>: %w", err)
 	} else if len(rows) == 0 {
-		return entity.Article{}, fmt.Errorf(
+		return entity.ArticlePage{}, fmt.Errorf(
 			"persistence<Pg.Article>: %w", oops.NotFound{})
 	}
 
-	article := entity.Article{
+	article := entity.ArticlePage{
 		Id:        rows[0].Id,
 		Title:     rows[0].Title,
 		Subtitle:  rows[0].Subtitle,

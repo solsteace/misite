@@ -15,7 +15,7 @@ type SerieListQueryParam struct {
 	Limit int
 }
 
-func (p Pg) SerieList(param SerieListQueryParam) ([]entity.SerieList, error) {
+func (p Pg) SerieList(param SerieListQueryParam) ([]entity.SerieListPage, error) {
 	query := `
 		SELECT
 			id,
@@ -59,15 +59,15 @@ func (p Pg) SerieList(param SerieListQueryParam) ([]entity.SerieList, error) {
 		CreatedAt   time.Time `db:"created_at"`
 	}
 	if err := p.db.Select(&rows, query, args...); err != nil {
-		return []entity.SerieList{}, fmt.Errorf(
+		return []entity.SerieListPage{}, fmt.Errorf(
 			"persistence<Pg.Series>: %w", err)
 	}
 
-	var serieList []entity.SerieList
-	var last *entity.SerieList
+	var serieList []entity.SerieListPage
+	var last *entity.SerieListPage
 	for _, r := range rows {
 		if last == nil || last.Id != r.Id {
-			sl := entity.SerieList{
+			sl := entity.SerieListPage{
 				Id:          r.Id,
 				Name:        r.Name,
 				Description: r.Description,
@@ -79,7 +79,7 @@ func (p Pg) SerieList(param SerieListQueryParam) ([]entity.SerieList, error) {
 	return serieList, nil
 }
 
-func (p Pg) Serie(id int) (entity.Serie, error) {
+func (p Pg) Serie(id int) (entity.SeriePage, error) {
 	var row struct {
 		Id          int    `db:"id"`
 		Name        string `db:"name"`
@@ -103,11 +103,11 @@ func (p Pg) Serie(id int) (entity.Serie, error) {
 		GROUP BY series.id`
 	args := []any{id}
 	if err := p.db.Get(&row, query, args...); err != nil {
-		return entity.Serie{}, fmt.Errorf(
+		return entity.SeriePage{}, fmt.Errorf(
 			"persistence<Pg.Serie>: %w", err)
 	}
 
-	serie := entity.Serie{
+	serie := entity.SeriePage{
 		Id:          row.Id,
 		Name:        row.Name,
 		Thumbnail:   row.Thumbnail,
@@ -122,7 +122,7 @@ type SerieContentQueryParam struct {
 	Limit int
 }
 
-func (p Pg) SerieArticleList(id int, param SerieContentQueryParam) ([]entity.SerieArticleList, error) {
+func (p Pg) SerieArticleList(id int, param SerieContentQueryParam) ([]entity.SeriePageArticleList, error) {
 	if param.Limit < 1 {
 		param.Limit = 10
 	}
@@ -153,14 +153,14 @@ func (p Pg) SerieArticleList(id int, param SerieContentQueryParam) ([]entity.Ser
 		param.Limit,
 		(param.Page - 1) * param.Limit}
 	if err := p.db.Select(&rows, query, args...); err != nil {
-		return []entity.SerieArticleList{}, fmt.Errorf(
+		return []entity.SeriePageArticleList{}, fmt.Errorf(
 			"persistence<Pg.SerieArticleList>: %w", err)
 	}
 
-	var serieArticles []entity.SerieArticleList
+	var serieArticles []entity.SeriePageArticleList
 	for _, r := range rows {
 		serieArticles = append(
-			serieArticles, entity.SerieArticleList{
+			serieArticles, entity.SeriePageArticleList{
 				Id:        r.Id,
 				Title:     r.Title,
 				Synopsis:  r.Synopsis,
@@ -171,7 +171,7 @@ func (p Pg) SerieArticleList(id int, param SerieContentQueryParam) ([]entity.Ser
 	return serieArticles, nil
 }
 
-func (p Pg) SerieProjectList(id int, param SerieContentQueryParam) ([]entity.SerieProjectList, error) {
+func (p Pg) SerieProjectList(id int, param SerieContentQueryParam) ([]entity.SeriePageProjectList, error) {
 	if param.Limit < 1 {
 		param.Limit = 10
 	}
@@ -200,14 +200,14 @@ func (p Pg) SerieProjectList(id int, param SerieContentQueryParam) ([]entity.Ser
 		param.Limit,
 		(param.Page - 1) * param.Limit}
 	if err := p.db.Select(&rows, query, args...); err != nil {
-		return []entity.SerieProjectList{}, fmt.Errorf(
+		return []entity.SeriePageProjectList{}, fmt.Errorf(
 			"persistence<Pg.SerieProjectList>: %w", err)
 	}
 
-	var serieProjects []entity.SerieProjectList
+	var serieProjects []entity.SeriePageProjectList
 	for _, r := range rows {
 		serieProjects = append(
-			serieProjects, entity.SerieProjectList{
+			serieProjects, entity.SeriePageProjectList{
 				Id:        r.Id,
 				Name:      r.Name,
 				Synopsis:  r.Synopsis,

@@ -1,4 +1,4 @@
-package internal
+package main
 
 import (
 	"fmt"
@@ -16,8 +16,8 @@ import (
 	"github.com/solsteace/misite/internal/service"
 )
 
-func Run() {
-	LoadEnv()
+func main() {
+	loadEnv()
 
 	dbCfg, err := pgx.ParseConfig(dB_URL)
 	if err != nil {
@@ -41,7 +41,7 @@ func Run() {
 	route.NewRouter(controller).UseOn(app)
 
 	port := 10000
-	fmt.Printf(fmt.Sprintf("Server listening on port %d...\n", port))
+	fmt.Printf("Server listening on port %d...\n", port)
 	if err := http.ListenAndServe(fmt.Sprintf(":%d", port), app); err != nil {
 		log.Fatalf("server listening: %v", err)
 	}
