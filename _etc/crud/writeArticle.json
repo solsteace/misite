@@ -1,0 +1,12 @@
+{
+    "data": [
+        {
+            "id": 17,
+            "title": "This is my testing article, NOW CHANGED",
+            "subtitle": "You know, to see if things are working properly, yeah?",
+            "content": "./site/_etc/crud/a.html",
+            "serie_id": 0,
+            "serie_order": 0
+        }
+    ]
+}
